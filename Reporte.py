@@ -18,31 +18,47 @@ import gc
 from report_utils import *
 from data_loader import *
 
-def reporte():
-    corrected_day, report_day = last_data_day()
-    #report_day = '05/09'
-    day, month = report_day.split('/')
-    fecha = dt.date(2019,12,30)
-    delta = corrected_day - fecha # Semana epidemiologica
 
+def reporte(slice_date = None):
 
+    #only needed newest report so it has the correct date
+    print(slice_date, report_date())
+    if slice_date == str(report_date()[0]).split(' ')[0]:
+        corrected_day, report_day = report_date()
+        day, month = report_day.split('/')
+        fecha = dt.date(2019,12,30)
+        delta = corrected_day- fecha # Semana epidemiologica
+        slice_date = None
+
+    elif slice_date is not None:
+        fecha = dt.date(2019,12,30)
+        year, month, day = slice_date.split('-')
+        corrected_day = dt.date(int(year),int(month),int(day))
+        report_day = corrected_day.strftime("%d/%m")
+        delta = corrected_day - fecha
     ############### Lectura de datos ######################
     sochi_dates, camas2, camas = hospitales_from_db()
     sochi_date2, sochi_date = pd.to_datetime(sochi_dates[0]).strftime("%d/%m"),pd.to_datetime(sochi_dates[1]).strftime("%d/%m")
 
-    popu = population_from_db()
+    pop, pop_reg = population_from_db()
 
-    # erre, erre_reg = r_comunas_and_regions()
-    erre = r_comunas_db()
-    erre_reg = r_regions_db()
-    erre_national = r_national_db()
-    im1, im2, im_dates = movility_from_db()
-    active_comunas = active_cases_from_db()
-    muertos_comunas = deaths_comunas_from_db()
+    erre = r_comunas_db(slice_date)
+    erre_reg = r_regions_db(slice_date)
+    erre_national = r_national_db(slice_date)
+
+    im1, im2, im_dates = movility_from_db() # slicing not ready
+    active_comunas = active_cases_from_db() # ready
+    muertos_comunas = deaths_comunas_from_db() # ready
     # for custom dates slice here
+
+    # pop, pop_reg
+    # info_comunas = pd.read_json('http://192.168.2.223:5006/getComunas')
+    # info_comunas = info_comunas['county'].astype(str).apply(lambda x:x.zfill(5))
+
 
     subrep = pd.read_csv('under_reporting/output/reportDataFinal_week.csv')
     # slicing of subrep currently not possible
+
 
 
 
@@ -62,12 +78,13 @@ def reporte():
         muerte_comunas[com] = muertos_comunas[muertos_comunas['Codigo comuna']==com]['Casos fallecidos'].iloc[-4:].values
 
     ##?
-    pop = popu.set_index('Nombre Comuna')#?
-    indices = pop.index.values
-    indices[-1] = 'Chile'
-
+    # pop = popu.set_index('Nombre Comuna')#?
+    # indices = pop.index.values
+    # indices[-1] = 'Chile'
+    # print('pop:' ,pop)
+    # print('popu:' ,popu)
     ## by region
-    pop_reg = pop.pivot_table(index='Nombre Region', values='Poblacion 2020', aggfunc=sum)
+    # pop_reg = pop.pivot_table(index='Nombre Region', values='Poblacion 2020', aggfunc=sum)
     muertos_region = muertos_comunas.pivot_table(index=['Region','Fecha'], values = 'Casos fallecidos', aggfunc=sum)
     ########################## calculo de tasa  de crecimiento ############################
 
@@ -92,20 +109,23 @@ def reporte():
     prevalencia = pd.DataFrame()
     mortalidad = pd.DataFrame()
     for com in datos_comunas.columns:
-        comuna = popu[popu.Comuna==com]['Nombre Comuna'].values[0]
-        prevalencia[comuna] = datos_comunas[com]*10000 / pop.loc[comuna, 'Poblacion 2020']
-        mortalidad[comuna] = muerte_comunas[com]*100000 / pop.loc[comuna, 'Poblacion 2020']
+        comuna = pop[pop.county==com].index.values[0]
+        #com = county id, com¿omuna = countyname
+        prevalencia[comuna] = datos_comunas[com]*10000 / pop[pop.county==com]['total_pop'].values # /datos_comunas
+        mortalidad[comuna] = muerte_comunas[com]*100000 / pop[pop.county==com]['total_pop'].values
 
     prevalencia_region = pd.DataFrame()
     mortalidad_region = pd.DataFrame(index=[0,1,2,3])
+    # print('regiones',datos_region.columns )
     for reg in datos_region.columns:
 
-        prevalencia_region[reg] = datos_region[reg]*10000 / pop_reg.loc[reg,'Poblacion 2020']
+        prevalencia_region[reg] = datos_region[reg]*10000 / pop_reg.loc[reg,'total_pop']
         for i in range(4):
-            mortalidad_region.loc[i,reg] = muertos_region.loc[reg].iloc[i-4].values*100000 / pop_reg.loc[reg,'Poblacion 2020']
+            mortalidad_region.loc[i,reg] = muertos_region.loc[reg].iloc[i-4].values*100000 / pop_reg.loc[reg,'total_pop']
 
-    chile_prvlnc = pd.DataFrame([(datos_comunas.sum(axis=1) *10000 / pop.loc['Chile', 'Poblacion 2020'])])
-
+    chile_prvlnc = pd.DataFrame([(datos_comunas.sum(axis=1) *10000 / pop_reg.total_pop.sum())])
+    print('popi:',pop_reg.total_pop.sum())
+    # print(datos_comunas.sum(axis=1) *10000,  pop.loc['Chile', 'total_pop'] )
     prvlnc_diff = prevalencia.sub(chile_prvlnc.T.mean(axis=1), axis=0)
     ########################## calculo tasa, prevalencia y mortalidad semanal ############################
     muni_raw_rate = 1 - datos_comunas.shift(1) / datos_comunas
@@ -119,9 +139,10 @@ def reporte():
     R_p = erre.pivot_table(index=['comuna','Fecha'])
 
     ## Calculando el R_e promedio de los últimos 14 días ¿?
-    R0 = pd.Series(data=np.zeros(len(pop.drop(['Chile']).index)), index=pop.drop(['Chile']).index)
+    # R0 = pd.Series(data=np.zeros(len(pop.drop(['Chile']).index)), index=pop.drop(['Chile']).index)
+    R0 = pd.Series(data=np.zeros(len(pop.index)), index=pop.index)
 
-    for comuna in pop.drop(['Chile']).index:
+    for comuna in pop.index:
         try:
             if R_p.MEAN.loc[comuna][-1]==0:
                 R0.loc[comuna] = 0
@@ -133,13 +154,13 @@ def reporte():
             R0.loc[comuna] = np.nan
 
     ## Calculando el R_e promedio regional de los últimos 14 días
-    erre_reg = erre_reg.replace({'region':
+    erre_reg = erre_reg.replace({'name':
                         {'Metropolitana':'Metropolitana de Santiago',
                         "Lib. Gral. Bernardo O'Higgins":"Libertador General Bernardo O'Higgins",
                         'Araucanía':'La Araucanía',
                         'Aysén del Gral. C. Ibáñez del Campo':'Aysén del General Carlos Ibáñez del Campo',
                         'Magallanes y Antártica Chilena':'Magallanes y de la Antártica Chilena'}})
-    R_p_reg = erre_reg.pivot_table(index=['region','Fecha'])
+    R_p_reg = erre_reg.pivot_table(index=['name','Fecha'])
 
     # R_p_reg = R_p_reg.rename(index={
     #                     'Metropolitana':'Metropolitana de Santiago',
@@ -157,8 +178,8 @@ def reporte():
             print('Reg Exception', region)
             R0_reg.loc[region] = np.nan
 
-    comun_per_region = pop['Nombre Region'].drop(['Chile'])
-
+    comun_per_region = pop['state_name'] # try changing for pop
+    #comun_per_region = pop
     #### MOVILIDAD
     im1.loc[im1.index.max() + 1] = ['R11',"O'Higgins", 0, 0]
     im1.loc[im1.index.max() + 1] = ['R12',"Antártica", 0, 0]
@@ -169,7 +190,7 @@ def reporte():
     im2 = im2.set_index('comuna')
     im2 = im2.rename(index=indices_dict)
     im_reg = im2.pivot_table(index='region', values=['IM','remanente'],aggfunc=np.mean)
-    im_reg2 = im_reg.set_index(pop.drop(['Chile'])['Nombre Region'].unique())
+    im_reg = im_reg.set_index(pop['state_name'].unique())
 
     #### Subreporte
     subrep = subrep.set_index('country')
@@ -177,15 +198,15 @@ def reporte():
                                  'Metropolitana':'Metropolitana de Santiago'})
 
     ########################## Creando dataFrame de visualización ############################
-    display = pd.DataFrame(index=pop.drop(['Chile']).index)
 
+    display = pd.DataFrame(index=pop.index)
     display['Prevalencia'] = [prevalencia.T[3].loc[c] for c in display.index]
-    display['Tasa'] = [muni_avg_rate.T[3].loc[pop[pop.index==c].Comuna.values[0]] for c in display.index]
+    display['Tasa'] = [muni_avg_rate.T[3].loc[pop[pop.index==c].county.values[0]] for c in display.index]
     display['R_e'] = R0
-    display['Inf. Activos'] = [datos_comunas[int(pop[pop.index==c].Comuna.values[0])].loc[3] for c in display.index]
+    display['Inf. Activos'] = [datos_comunas[int(pop[pop.index==c].county.values[0])].loc[3] for c in display.index]
     for c in display.index:
         if comun_per_region[c] in subrep.index:
-            infected = datos_comunas[int(pop[pop.index==c].Comuna.values[0])].loc[3]
+            infected = datos_comunas[int(pop[pop.index==c].county.values[0])].loc[3]
             display.loc[c,'Inf. Act. Probables'] = '{:.0f} ~ {:.0f}'.format(infected / subrep.upper[comun_per_region[c]], infected / subrep.lower[comun_per_region[c]])
         else:
             display.loc[c,'Inf. Act. Probables'] = '-'
@@ -195,7 +216,7 @@ def reporte():
     display = display.fillna(0)
 
 
-    reg_display = pd.DataFrame(index=pop.drop(['Chile'])['Nombre Region'].unique())
+    reg_display = pd.DataFrame(index=pop_reg.index)
     reg_display['Prevalencia'] = [prevalencia_region.loc[3,r] for r in reg_display.index]
     reg_display['Tasa'] = [region_avg_rate.loc[3,r] for r in reg_display.index]
     reg_display['R_e'] = R0_reg
@@ -207,14 +228,14 @@ def reporte():
         else:
             reg_display.loc[r,'Inf. Act. Probables'] = '-'
     reg_display['Mortalidad'] = [mortalidad_region[r].loc[3] for r in reg_display.index]
-    reg_display['Viajes'] = [im_reg2['IM'].loc[r] for r in reg_display.index]
-    reg_display['Movilidad'] = [(im_reg2['remanente'].loc[r]) / 100 for r in reg_display.index]
+    reg_display['Viajes'] = [im_reg['IM'].loc[r] for r in reg_display.index]
+    reg_display['Movilidad'] = [(im_reg['remanente'].loc[r]) / 100 for r in reg_display.index]
 
 
     ## R arrow represent R rate of change
-    R_arrow_last = pd.Series(data=np.zeros(len(pop.drop(['Chile']).index)), index=pop.drop(['Chile']).index)
-    R_arrow_past = pd.Series(data=np.zeros(len(pop.drop(['Chile']).index)), index=pop.drop(['Chile']).index)
-    for comuna in pop.drop(['Chile']).index:
+    R_arrow_last = pd.Series(data=np.zeros(len(pop.index)), index=pop.index)
+    R_arrow_past = pd.Series(data=np.zeros(len(pop.index)), index=pop.index)
+    for comuna in pop.index:
         try:
             if R_p.MEAN.loc[comuna].iloc[-1]!=0 and int(display[display.index == comuna]['Inf. Activos'])!=0:
                 R_arrow_last.loc[comuna] = R_p.MEAN.loc[comuna].iloc[-7:].mean()
@@ -275,6 +296,7 @@ def reporte():
             reg_display.iloc[i,reg_display.columns.get_loc('R_e')] = 'ND'
     ## guardamos la tabla
     display.to_csv('Report/display_{}.csv'.format(report_day.replace('/','_')))
+    generate_table('Report/display_{}.csv'.format(report_day.replace('/','_')))
     # funcion display
     ####################################################################################################
     data = erre_reg #?
@@ -288,11 +310,11 @@ def reporte():
     #########  COVER
     filenames.append(cover(report_day, delta))
     ######### Regiones
-    filenames += regiones_page(report_day, pop, display, display_values, reg_display, reg_display_values, data, subrep, region_avg_rate,prevalencia_region, comun_per_region, muni_raw1, muni_raw2 ,weekly_prev1, weekly_prev2, R_arrow_past,R_arrow_last, im1,im2,death_rate1,death_rate2, sochi_date)
+    filenames += regiones_page(report_day, pop, display, display_values, reg_display, reg_display_values, data, subrep, region_avg_rate,prevalencia_region, comun_per_region, muni_raw1, muni_raw2 ,weekly_prev1, weekly_prev2, R_arrow_past,R_arrow_last, im1,im2,death_rate1,death_rate2, sochi_date, im_dates)
     ######### Metropolitana Page
-    filenames.append(metropolitana_page(report_day, pop, display, display_values, reg_display, reg_display_values, data, subrep, region_avg_rate,prevalencia_region, comun_per_region, muni_raw1, muni_raw2 ,weekly_prev1, weekly_prev2, R_arrow_past,R_arrow_last, im1,im2,death_rate1,death_rate2, sochi_date))
+    filenames.append(metropolitana_page(report_day, pop, display, display_values, reg_display, reg_display_values, data, subrep, region_avg_rate,prevalencia_region, comun_per_region, muni_raw1, muni_raw2 ,weekly_prev1, weekly_prev2, R_arrow_past,R_arrow_last, im1,im2,death_rate1,death_rate2, sochi_date, im_dates))
     #### Otras Provincias ###
-    filenames.append(otras_provincias_page(report_day, pop, display, display_values, reg_display, reg_display_values, data, subrep, region_avg_rate,prevalencia_region, comun_per_region, muni_raw1, muni_raw2 ,weekly_prev1, weekly_prev2, R_arrow_past,R_arrow_last, im1,im2,death_rate1,death_rate2, sochi_date))
+    filenames.append(otras_provincias_page(report_day, pop, display, display_values, reg_display, reg_display_values, data, subrep, region_avg_rate,prevalencia_region, comun_per_region, muni_raw1, muni_raw2 ,weekly_prev1, weekly_prev2, R_arrow_past,R_arrow_last, im1,im2,death_rate1,death_rate2, sochi_date, im_dates))
     ### Hospitales
     filenames.append(hospitales_page(report_day, camas, camas2, chile_avg_rate, chile_prvlnc, sochi_dates))
     ### Nacional
@@ -301,14 +323,20 @@ def reporte():
 
     ######### Merging
     from PyPDF2 import PdfFileMerger
-    day, month = report_day.split('/')
-    folder = 'pages/'
+    endpoint_R = requests.get('http://192.168.2.223:5006/getNationalEffectiveReproduction' )
+    R = json.loads(endpoint_R.text)
+    if slice_date is not None:
+        year, month, day = slice_date.split('-')
+    else:
+        day, month  = corrected_day.strftime("%d/%m").split('/')
+
+    folder = 'Report/'
     merger = PdfFileMerger()
     #print(filenames)
     for pdf in filenames:
         merger.append(pdf)
     name = 'Reporte'
-
+    print('Report_day_is: '+ name+'_'+day+'_'+month )
     with open(name+'_'+day+'_'+month+".pdf", "wb") as fout:
         merger.write(fout)
         merger.close()

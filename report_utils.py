@@ -23,7 +23,12 @@ logos = mpimg.imread('logos/uss_cinv_udd.png')
 logo_sochimi = mpimg.imread('logos/logo_sochimi.png')
 logo_fcv = mpimg.imread('logos/logos.png')
 logofcv = mpimg.imread('logos/logo_fcv.png')
-popu = pd.read_excel("sochimi/poblacion2020_nacional.xlsx",  index_col = 0)
+logofinis = mpimg.imread('logos/logo_finis.png')
+# popu = pd.read_excel("sochimi/poblacion2020_nacional.xlsx",  index_col = 0)
+popu =pd.read_json('http://192.168.2.223:5006/getComunas')
+popu = popu[['state', 'state_name', 'county', 'county_name', 'province_name', 'male_pop', 'female_pop', 'total_pop']]
+#counties_info.index = counties_info['county'].astype(str).apply(lambda x:x.zfill(5))
+popu = popu.set_index('county_name')
 
 # list and dicts
 regiones = ['Arica y Parinacota',
@@ -43,7 +48,6 @@ regiones = ['Arica y Parinacota',
             'Magallanes y de la Antártica Chilena',
             'Metropolitana de Santiago']
 
-
 region_names_dict = {
                         'Tarapaca':'Tarapacá',
                         'Valparaiso':'Valparaíso',
@@ -56,6 +60,7 @@ region_names_dict = {
                          'Aysen':'Aysén del General Carlos Ibáñez del Campo',
                          'Magallanes y la Antartica':'Magallanes y de la Antártica Chilena'
                      }
+
 order = [
         'SS ARICA',
         'SS IQUIQUE',
@@ -87,6 +92,7 @@ order = [
         'SS METROPOLITANO SUR',
         'SS METROPOLITANO SUR ORIENTE'
 ]
+
 indices_dict={'Til Til':'Tiltil',
                       'Ránqui':'Ránquil',
                       'Pitrufquén':'Pitrufquen',
@@ -167,7 +173,6 @@ indices_dict={'Til Til':'Tiltil',
                       'Quellon':'Quellón',
                       'Hualaihue': 'Hualaihué',
                       'Coihaique':'Coyhaique'}
-im_dates = '17/08-23/08'
 
 regiones_short = ['Arica y Parinacota',
             'Tarapacá',
@@ -185,6 +190,7 @@ regiones_short = ['Arica y Parinacota',
             'Aysén',
             'Magallanes',
             'Metropolitana']
+
 def __iso_handler(x): #overk
     for i, item in enumerate(x.values):
         s = item.split('T')
@@ -227,6 +233,17 @@ def color_camas(data):#23, 41, 58
     else: color = '#ff0000'
     return color
 
+def report_date():
+    endpoint_R = requests.get('http://192.168.2.223:5006/getNationalEffectiveReproduction' )
+    R = json.loads(endpoint_R.text)
+    year, month, day = str(R['dates'][-1].split('T')[0]).split('-')
+    date = dtime.datetime(int(year),int(month),int(day))
+    date += dtime.timedelta(days=1)
+
+    report_day = date.strftime("%d/%m")
+    return date.date() , report_day
+    # return str(date).split(' ')[0]#.replace("-","_")
+
 def last_data_day():
     '''
     It calculates the nearest past Tuesday or Saturday
@@ -252,10 +269,11 @@ def cover(report_day, delta):
     logo_sochimi = mpimg.imread('logos/logo_sochimi.png')
     logo_fcv = mpimg.imread('logos/logos.png')
     logofcv = mpimg.imread('logos/logo_fcv.png')
+    logofinis= mpimg.imread('logos/logo_finis.png')
     sns.set_context("paper", font_scale=1)
     figcover = plt.figure(edgecolor='k', figsize=(11,8.5))
-    axlogos = figcover.add_axes([0.05,.7,.3*.8,.3*.8]) # [0.05,.7,.3,.3]
-    axsochi = figcover.add_axes([0.24,.78,.2*1.2,.085*1.2])
+    axlogos = figcover.add_axes([0.05,.67,.3*1.1,.3*1.1]) # [0.05,.7,.3,.3]
+    axsochi = figcover.add_axes([0.30,.8,.2*1.2,.085*1.2])
     axfcv = figcover.add_axes([.8,.75,.15,.2])
     axmain = figcover.add_axes([.0,.0,1,.9])
     axlogos.imshow(logos)
@@ -289,6 +307,7 @@ def hospitales_page(report_day, camas, camas2, chile_avg_rate, chile_prvlnc, soc
     ax_logo.axis('off')
     ax_cinv = fig.add_axes([.08,.875,.25,.08])
     ax_sochi = fig.add_axes([.775,.885,.07,.07])
+    ax_finis = fig.add_axes([.775,.885,.07,.07])
     ax_cinv.imshow(logos)
     ax_sochi.imshow(logo_sochimi)
     ax_cinv.axis('off')
@@ -309,7 +328,7 @@ def hospitales_page(report_day, camas, camas2, chile_avg_rate, chile_prvlnc, soc
     fig.savefig(filename, dpi=1200)
     return filename
 
-def otras_provincias_page(report_day, pop, display, display_values, reg_display, reg_display_values, data, subrep, region_avg_rate,prevalencia_region, comun_per_region, muni_raw1, muni_raw2 ,weekly_prev1, weekly_prev2, R_arrow_past,R_arrow_last, im1,im2,death_rate1,death_rate2, sochi_date):
+def otras_provincias_page(report_day, pop, display, display_values, reg_display, reg_display_values, data, subrep, region_avg_rate,prevalencia_region, comun_per_region, muni_raw1, muni_raw2 ,weekly_prev1, weekly_prev2, R_arrow_past,R_arrow_last, im1,im2,death_rate1,death_rate2, sochi_date, im_dates ):
     sns.set_context("paper", font_scale=.6)
     every_nth = 7
 
@@ -320,7 +339,7 @@ def otras_provincias_page(report_day, pop, display, display_values, reg_display,
     ax_logo = fig.add_axes([.85,.875,.1,.1])
     ax_logo.imshow(logofcv)
     ax_logo.axis('off')
-    ax_cinv = fig.add_axes([.06,.875,.25,.08])
+    ax_cinv = fig.add_axes([.05,.875,.25,.08])
     ax_sochi = fig.add_axes([.775,.885,.07,.07])
     ax_cinv.imshow(logos)
     ax_sochi.imshow(logo_sochimi)
@@ -376,7 +395,7 @@ def otras_provincias_page(report_day, pop, display, display_values, reg_display,
              , ha='left',fontsize='x-large')
 
     ax = fig.add_axes([.125, .01, .475, .84])
-    selection = pop[(pop['Nombre Region']=='Metropolitana de Santiago')&(pop['Nombre Provincia']!='Santiago')].index.values
+    selection = pop[(pop['state_name']=='Metropolitana de Santiago')&(pop['province_name']!='Santiago')].index.values
     #make_table(display.loc[selection], display_values.loc[selection], ax, True)
     make_table(display.loc[selection], display_values.loc[selection],
                    reg_display[reg_display.index==region].rename(index={region:'VALOR REGIONAL ⁸'}), reg_display_values[reg_display.index==region], ax, True)
@@ -387,15 +406,15 @@ def otras_provincias_page(report_day, pop, display, display_values, reg_display,
     comuna = regiones_short[r]
     comuna = region
 
-    ax2.plot(data[data.region==comuna]['MEAN'][1:])
-    ax2.fill_between(data[data.region==comuna].index[1:],
-                     data[data.region==comuna]['Low_95'][1:], data[data.region==comuna]['High_95'][1:], alpha=.4)
-    ax2.hlines(data[data.region==comuna]['MEAN'][-14:].mean(), data[data.region==comuna].iloc[-14].name,data[data.region==comuna].iloc[-1].name, color='C4')
-    ax2.hlines(data[data.region==comuna]['MEAN'][-7:].mean(), data[data.region==comuna].iloc[-7].name,data[data.region==comuna].iloc[-1].name, color='C2')
-    ax2.hlines(1, data[data.region==comuna].iloc[1].name,data[data.region==comuna].iloc[-1].name, ls='--',color='k')
-    ax2.annotate('R_e 14d = {:.2f}'.format(data[data.region==comuna]['MEAN'][-14:].mean()), (.75,.7), color='C4',xycoords='axes fraction')
-    ax2.annotate('R_e 7d = {:.2f}'.format(data[data.region==comuna]['MEAN'][-7:].mean()), (.75,.65), color='C2',xycoords='axes fraction')
-    ax2.annotate('R_e inst. = {:.2f}'.format(data[data.region==comuna]['MEAN'][-1]), (.75,.60), color='k',xycoords='axes fraction')
+    ax2.plot(data[data.name==comuna]['MEAN'][1:])
+    ax2.fill_between(data[data.name==comuna].index[1:],
+                     data[data.name==comuna]['Low_95'][1:], data[data.name==comuna]['High_95'][1:], alpha=.4)
+    ax2.hlines(data[data.name==comuna]['MEAN'][-14:].mean(), data[data.name==comuna].iloc[-14].name,data[data.name==comuna].iloc[-1].name, color='C4')
+    ax2.hlines(data[data.name==comuna]['MEAN'][-7:].mean(), data[data.name==comuna].iloc[-7].name,data[data.name==comuna].iloc[-1].name, color='C2')
+    ax2.hlines(1, data[data.name==comuna].iloc[1].name,data[data.name==comuna].iloc[-1].name, ls='--',color='k')
+    ax2.annotate('R_e 14d = {:.2f}'.format(data[data.name==comuna]['MEAN'][-14:].mean()), (.75,.7), color='C4',xycoords='axes fraction')
+    ax2.annotate('R_e 7d = {:.2f}'.format(data[data.name==comuna]['MEAN'][-7:].mean()), (.75,.65), color='C2',xycoords='axes fraction')
+    ax2.annotate('R_e inst. = {:.2f}'.format(data[data.name==comuna]['MEAN'][-1]), (.75,.60), color='k',xycoords='axes fraction')
     matplotlib.pyplot.sca(ax2)
     plt.xticks(rotation=45)
     ax2.tick_params(bottom=False, left=True, labelleft=True, labelbottom=True)
@@ -409,7 +428,7 @@ def otras_provincias_page(report_day, pop, display, display_values, reg_display,
     fig.savefig(filename, dpi=1200) # faltan reg display y sus copias values
     return filename
 
-def metropolitana_page(report_day, pop, display, display_values, reg_display, reg_display_values, data, subrep, region_avg_rate,prevalencia_region, comun_per_region, muni_raw1, muni_raw2 ,weekly_prev1, weekly_prev2, R_arrow_past,R_arrow_last, im1,im2,death_rate1,death_rate2, sochi_date):
+def metropolitana_page(report_day, pop, display, display_values, reg_display, reg_display_values, data, subrep, region_avg_rate,prevalencia_region, comun_per_region, muni_raw1, muni_raw2 ,weekly_prev1, weekly_prev2, R_arrow_past,R_arrow_last, im1,im2,death_rate1,death_rate2, sochi_date, im_dates):
     sns.set_context("paper", font_scale=.6)
     every_nth = 7
 
@@ -420,7 +439,7 @@ def metropolitana_page(report_day, pop, display, display_values, reg_display, re
     ax_logo = fig.add_axes([.85,.875,.1,.1])
     ax_logo.imshow(logofcv)
     ax_logo.axis('off')
-    ax_cinv = fig.add_axes([.06,.875,.25,.08])
+    ax_cinv = fig.add_axes([.05,.875,.25,.08])
     ax_sochi = fig.add_axes([.775,.885,.07,.07])
     ax_cinv.imshow(logos)
     ax_sochi.imshow(logo_sochimi)
@@ -475,7 +494,7 @@ def metropolitana_page(report_day, pop, display, display_values, reg_display, re
              , ha='left',fontsize='x-large')
 
     ax = fig.add_axes([.125, .01, .475, .84])
-    selection = pop[pop['Nombre Provincia']=='Santiago'].index.values
+    selection = pop[pop['province_name']=='Santiago'].index.values
     make_table(display.loc[selection], display_values.loc[selection],
                    reg_display[reg_display.index==region].rename(index={region:'VALOR REGIONAL ⁸'}), reg_display_values[reg_display.index==region], ax, True)
     add_arrows(display_values.loc[selection], muni_raw1, muni_raw2 ,weekly_prev1, weekly_prev2, R_arrow_past,R_arrow_last, im1,im2,death_rate1,death_rate2, ax, 0.21, .935, .18, .06, .29,.68,.905,.0315, .0205)
@@ -483,15 +502,15 @@ def metropolitana_page(report_day, pop, display, display_values, reg_display, re
     ax2 = fig.add_axes([.645, .595, .3, .22])
     comuna = regiones_short[r]
     comuna = region
-    ax2.plot(data[data.region==comuna]['MEAN'][1:])
-    ax2.fill_between(data[data.region==comuna].index[1:],
-                     data[data.region==comuna]['Low_95'][1:], data[data.region==comuna]['High_95'][1:], alpha=.4)
-    ax2.hlines(data[data.region==comuna]['MEAN'][-14:].mean(), data[data.region==comuna].iloc[-14].name,data[data.region==comuna].iloc[-1].name, color='C4')
-    ax2.hlines(data[data.region==comuna]['MEAN'][-7:].mean(), data[data.region==comuna].iloc[-7].name,data[data.region==comuna].iloc[-1].name, color='C2')
-    ax2.hlines(1, data[data.region==comuna].iloc[1].name,data[data.region==comuna].iloc[-1].name, ls='--',color='k')
-    ax2.annotate('R_e 14d = {:.2f}'.format(data[data.region==comuna]['MEAN'][-14:].mean()), (.75,.7), color='C4',xycoords='axes fraction')
-    ax2.annotate('R_e 7d = {:.2f}'.format(data[data.region==comuna]['MEAN'][-7:].mean()), (.75,.65), color='C2',xycoords='axes fraction')
-    ax2.annotate('R_e inst. = {:.2f}'.format(data[data.region==comuna]['MEAN'][-1]), (.75,.60), color='k',xycoords='axes fraction')
+    ax2.plot(data[data.name==comuna]['MEAN'][1:])
+    ax2.fill_between(data[data.name==comuna].index[1:],
+                     data[data.name==comuna]['Low_95'][1:], data[data.name==comuna]['High_95'][1:], alpha=.4)
+    ax2.hlines(data[data.name==comuna]['MEAN'][-14:].mean(), data[data.name==comuna].iloc[-14].name,data[data.name==comuna].iloc[-1].name, color='C4')
+    ax2.hlines(data[data.name==comuna]['MEAN'][-7:].mean(), data[data.name==comuna].iloc[-7].name,data[data.name==comuna].iloc[-1].name, color='C2')
+    ax2.hlines(1, data[data.name==comuna].iloc[1].name,data[data.name==comuna].iloc[-1].name, ls='--',color='k')
+    ax2.annotate('R_e 14d = {:.2f}'.format(data[data.name==comuna]['MEAN'][-14:].mean()), (.75,.7), color='C4',xycoords='axes fraction')
+    ax2.annotate('R_e 7d = {:.2f}'.format(data[data.name==comuna]['MEAN'][-7:].mean()), (.75,.65), color='C2',xycoords='axes fraction')
+    ax2.annotate('R_e inst. = {:.2f}'.format(data[data.name==comuna]['MEAN'][-1]), (.75,.60), color='k',xycoords='axes fraction')
 
     matplotlib.pyplot.sca(ax2)
     plt.xticks(rotation=45)
@@ -506,7 +525,7 @@ def metropolitana_page(report_day, pop, display, display_values, reg_display, re
     fig.savefig(filename, dpi=1200)
     return filename
 
-def regiones_page(report_day, pop, display, display_values, reg_display, reg_display_values, data, subrep, region_avg_rate,prevalencia_region, comun_per_region, muni_raw1, muni_raw2 ,weekly_prev1, weekly_prev2, R_arrow_past,R_arrow_last, im1,im2,death_rate1,death_rate2, sochi_date):
+def regiones_page(report_day, pop, display, display_values, reg_display, reg_display_values, data, subrep, region_avg_rate,prevalencia_region, comun_per_region, muni_raw1, muni_raw2 ,weekly_prev1, weekly_prev2, R_arrow_past,R_arrow_last, im1,im2,death_rate1,death_rate2, sochi_date, im_dates):
 
     sns.set_context("paper", font_scale=.6)
     every_nth = 7
@@ -549,7 +568,7 @@ def regiones_page(report_day, pop, display, display_values, reg_display, reg_dis
         ax_logo = fig.add_axes([.85,.875,.1,.1])
         ax_logo.imshow(logofcv)
         ax_logo.axis('off')
-        ax_cinv = fig.add_axes([.06,.875,.25,.08])
+        ax_cinv = fig.add_axes([.05,.875,.25,.08])
         ax_sochi = fig.add_axes([.775,.885,.07,.07])
         ax_cinv.imshow(logos)
         ax_sochi.imshow(logo_sochimi)
@@ -616,16 +635,16 @@ def regiones_page(report_day, pop, display, display_values, reg_display, reg_dis
         comuna = regiones_short[r]
         comuna = region
 
-        ax2.plot(data[data.region==comuna]['MEAN'][1:])
-        ax2.fill_between(data[data.region==comuna].index[1:],
-                         data[data.region==comuna]['Low_95'][1:], data[data.region==comuna]['High_95'][1:], alpha=.4)
+        ax2.plot(data[data.name==comuna]['MEAN'][1:])
+        ax2.fill_between(data[data.name==comuna].index[1:],
+                         data[data.name==comuna]['Low_95'][1:], data[data.name==comuna]['High_95'][1:], alpha=.4)
 
-        ax2.hlines(data[data.region==comuna]['MEAN'][-14:].mean(), data[data.region==comuna].iloc[-14].name,data[data.region==comuna].iloc[-1].name, color='C4')
-        ax2.hlines(data[data.region==comuna]['MEAN'][-7:].mean(), data[data.region==comuna].iloc[-7].name,data[data.region==comuna].iloc[-1].name, color='C2')
-        ax2.hlines(1, data[data.region==comuna].iloc[1].name,data[data.region==comuna].iloc[-1].name, ls='--',color='k')
-        ax2.annotate('R_e 14d = {:.2f}'.format(data[data.region==comuna]['MEAN'][-14:].mean()), (.75,.7), color='C4',xycoords='axes fraction')
-        ax2.annotate('R_e 7d = {:.2f}'.format(data[data.region==comuna]['MEAN'][-7:].mean()), (.75,.65), color='C2',xycoords='axes fraction')
-        ax2.annotate('R_e inst. = {:.2f}'.format(data[data.region==comuna]['MEAN'][-1]), (.75,.60), color='k',xycoords='axes fraction')
+        ax2.hlines(data[data.name==comuna]['MEAN'][-14:].mean(), data[data.name==comuna].iloc[-14].name,data[data.name==comuna].iloc[-1].name, color='C4')
+        ax2.hlines(data[data.name==comuna]['MEAN'][-7:].mean(), data[data.name==comuna].iloc[-7].name,data[data.name==comuna].iloc[-1].name, color='C2')
+        ax2.hlines(1, data[data.name==comuna].iloc[1].name,data[data.name==comuna].iloc[-1].name, ls='--',color='k')
+        ax2.annotate('R_e 14d = {:.2f}'.format(data[data.name==comuna]['MEAN'][-14:].mean()), (.75,.7), color='C4',xycoords='axes fraction')
+        ax2.annotate('R_e 7d = {:.2f}'.format(data[data.name==comuna]['MEAN'][-7:].mean()), (.75,.65), color='C2',xycoords='axes fraction')
+        ax2.annotate('R_e inst. = {:.2f}'.format(data[data.name==comuna]['MEAN'][-1]), (.75,.60), color='k',xycoords='axes fraction')
         matplotlib.pyplot.sca(ax2)
         plt.xticks(rotation=45)
         ax2.tick_params(bottom=False, left=True, labelleft=True, labelbottom=True)
@@ -670,7 +689,7 @@ def add_arrows(datos, muni_raw1, muni_raw2 ,weekly_prev1, weekly_prev2, R_arrow_
     y_ = np.linspace(h_lim, l_lim,len(selection))
     for y, comuna in enumerate(selection):
 
-        com = popu[popu['Nombre Comuna']==comuna].Comuna.values[0]
+        com = popu[popu.index==comuna].county.values[0] #com = popu[popu['county_name']==comuna].county.values[0]
         #1
         if muni_raw1.loc[com] < muni_raw2.loc[com]*.95:
             ax.annotate("", xy=(x_t+.09, y_[y]+dy), xytext=(x_t-dx+.09, y_[y]), arrowprops=dict(arrowstyle="->"),annotation_clip=False, xycoords='axes fraction')
@@ -823,7 +842,6 @@ def hospitales_from_excel(hospitales, hospitales_lastweek):
     camas2 = camas2.fillna(0)
     return camas, camas2
 
-
 def Nacional_page(result, chile_avg_rate, chile_prvlnc, subrep, activos,report_day):
 
     sns.set_context("paper", font_scale=.6)
@@ -835,7 +853,7 @@ def Nacional_page(result, chile_avg_rate, chile_prvlnc, subrep, activos,report_d
     ax_logo = fig.add_axes([.8,.868,.1*1.2,.1*1.2])
     ax_logo.imshow(logofcv)
     ax_logo.axis('off')
-    ax_cinv = fig.add_axes([.06,.90,.25*0.7,.08*0.7])
+    ax_cinv = fig.add_axes([.05,.89,.25*0.9,.08*0.9])
     ax_sochi = fig.add_axes([.74,.9,.05*1.2,.05*1.2])
     ax_cinv.imshow(logos)
     ax_sochi.imshow(logo_sochimi)
@@ -881,3 +899,31 @@ def Nacional_page(result, chile_avg_rate, chile_prvlnc, subrep, activos,report_d
     fig.savefig(filename, dpi=1200)
 
     return filename
+
+def generate_table(file):
+    date = file[-9:]
+    Tabla = pd.read_csv(file, index_col = "county_name")
+    Tabla.columns = ['Prevalencia', 'Tasa %', 'R_e', 'Activos', 'Probables',
+           'Mortalidad', 'Viajes', 'Movilidad']
+    Probables = Tabla['Probables'].copy()
+    print(Probables.apply(lambda x: x.split('~')) )
+
+    Tabla.drop('Probables', axis= 'columns', inplace = True)
+    #Cambiar caracteres
+    Tabla = Tabla.apply(lambda x: x.astype(str).str.replace(',','.'))
+    Tabla = Tabla.apply(lambda x: x.astype(str).str.replace('ND','0'))
+    Tabla = Tabla.apply(lambda x: x.astype(str).str.replace('%',''))
+    print(Tabla)
+
+    # Pasar de string a float
+    columns = Tabla.columns
+    for column in columns:
+
+        Tabla[column] = pd.to_numeric(Tabla[column])
+
+    #Renombrar columna
+    Tabla = Tabla.rename(columns={'Tasa': 'Tasa %'})
+    Tabla.to_csv('Tables/Tabla_'+date)
+
+def sex_age_ajusted_death_rates(deaths):
+    pass

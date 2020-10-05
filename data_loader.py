@@ -136,10 +136,10 @@ def hospitales_from_db():
     sochi_date2, sochi_date = pd.to_datetime(days[0]).strftime("%d/%m"),pd.to_datetime(days[1]).strftime("%d/%m")
     return days, HEALTH_SERVICE_prev, HEALTH_SERVICE_newest
 
-def population_from_db():
-    # not yet
-    pop = pd.read_excel("sochimi/poblacion2020_nacional.xlsx",  index_col = 0)
-    return pop
+# def population_from_db():
+#     # not yet
+#     pop = pd.read_excel("sochimi/poblacion2020_nacional.xlsx",  index_col = 0)
+#     return pop
 
 def r_comunas_and_regions():
     erre = pd.read_csv('time_series/R_Efectivo_comunas_'+report_day.replace('/','_')+'.csv')
@@ -148,29 +148,37 @@ def r_comunas_and_regions():
     erre_reg = erre_reg.rename(columns={'Mean(R)': 'MEAN','Quantile.0.025(R)': 'Low_95','Quantile.0.975(R)': 'High_95'})
     return erre, erre_reg
 
-def r_regions_db():
+def r_regions_db(slicing_date = None):
     endpoint_R_region = requests.get('http://192.168.2.223:5006/getEffectiveReproductionAllStates' )
     R_region = json.loads(endpoint_R_region.text)
     R_region_data = pd.DataFrame(R_region['data']).T
     dates = pd.DataFrame(R_region['dates'])
-    R_region_data['region']=R_region_data.index
-    R_region_data = R_region_data.set_index('region').apply(lambda x: x.apply(pd.Series).stack()).reset_index().drop('level_1', 1)
+    R_region_data['name']=R_region_data.index
+    R_region_data = R_region_data.set_index('name').apply(lambda x: x.apply(pd.Series).stack()).reset_index().drop('level_1', 1)
     for i in range(4):
         dates = pd.concat((dates, dates))
     dates = pd.DataFrame(dates).apply(__iso_handler, axis = 1)
     R_region_data['Fecha'] = dates.values
-    R_region_data = R_region_data.replace({'region': region_dict()})
+    R_region_data = R_region_data.replace({'name': region_dict()})
     R_region_data = R_region_data.rename(columns={'mean': 'MEAN','quantile0025': 'Low_95','quantile0975': 'High_95'})
 
+    if slicing_date is not None:
+        indices = []
+        start_slice_index = R_region_data.index[R_region_data['Fecha'] == "2020-04-07"].tolist()
+        end_slice_index = R_region_data.index[R_region_data['Fecha'] == slicing_date].tolist()
+        for i in range(len(start_slice_index)):
+            inter =  range(start_slice_index[i], end_slice_index[i])
+            indices += inter
+        R_region_data = R_region_data.iloc[indices]
     return R_region_data
 
 def region_dict():
     r_df =pd.read_json('http://192.168.2.223:5006/getStates')
     r_df.index = r_df['id'].astype(str).apply(lambda x:x.zfill(2))
-    r_dict = r_df['description'].to_dict()
+    r_dict = r_df['name'].to_dict()
     return r_dict
 
-def r_comunas_db():
+def r_comunas_db(slicing_date = None):
     endpoint_R_comuna = requests.get('http://192.168.2.223:5006/getEffectiveReproductionAllComunas' )
     R_comuna = json.loads(endpoint_R_comuna.text)
     R_comuna_data = pd.DataFrame(R_comuna['data']).T
@@ -178,9 +186,9 @@ def r_comunas_db():
     R_comuna_data['comuna']=R_comuna_data.index
     R_comuna_data = R_comuna_data.set_index('comuna').apply(lambda x: x.apply(pd.Series).stack()).reset_index().drop('level_1', 1)
     c_df =pd.read_json('http://192.168.2.223:5006/getComunas')
-    c_df.index = c_df['cut'].astype(str).apply(lambda x:x.zfill(5))
-    comunas_dict = c_df['description'].to_dict()
-    comunas_region_dict =c_df['idState'].astype(str).apply(lambda x:x.zfill(2)).to_dict()
+    c_df.index = c_df['county'].astype(str).apply(lambda x:x.zfill(5))
+    comunas_dict = c_df['county_name'].to_dict()
+    comunas_region_dict =c_df['state'].astype(str).apply(lambda x:x.zfill(2)).to_dict()
     R_comuna_data['region'] = R_comuna_data['comuna']
     R_comuna_data = R_comuna_data.replace({'region':comunas_region_dict})
     R_comuna_data = R_comuna_data.replace({'region': region_dict(), 'comuna': comunas_dict})
@@ -191,13 +199,27 @@ def r_comunas_db():
     dates_f = pd.DataFrame(dates_f).apply(__iso_handler, axis = 1)
     R_comuna_data['Fecha'] = dates_f.values
     R_comuna_data = R_comuna_data.rename(columns={'mean': 'MEAN','quantile0025': 'Low_95','quantile0975': 'High_95'})
+
+    if slicing_date is not None:
+        indices = []
+        start_slice_index = R_comuna_data.index[R_comuna_data['Fecha'] == "2020-04-07"].tolist()
+        end_slice_index = R_comuna_data.index[R_comuna_data['Fecha'] == slicing_date].tolist()
+        for i in range(len(start_slice_index)):
+            inter =  range(start_slice_index[i], end_slice_index[i])
+            indices += inter
+        R_comuna_data = R_comuna_data.iloc[indices]
     return R_comuna_data
 
-def r_national_db():
+def r_national_db(slicing_date = None):
     endpoint_R_national = requests.get('http://192.168.2.223:5006/getNationalEffectiveReproduction' )
     R_national = pd.DataFrame(json.loads(endpoint_R_national.text))
     R_national['Fecha'] = pd.DataFrame(R_national['dates']).apply(__iso_handler, axis = 1)
     R_national = R_national.rename(columns={'mean': 'MEAN','quantile0025': 'Low_95','quantile0975': 'High_95'})
+
+    if slicing_date is not None:
+        slice_index = R_national.index[R_national['Fecha'] == slicing_date].tolist()[0]
+        R_national = R_national.iloc[:slice_index]
+
     return R_national
 
 def movility_from_db():
@@ -207,31 +229,76 @@ def movility_from_db():
     im1 = pd.DataFrame()
     im2 = pd.DataFrame()
     marzo = pd.DataFrame()
+    last_dates = [im.columns[-7], im.columns[-1]]
+    prev_dates = [im.columns[-14], im.columns[-8]]
+    #do the substraction date -
     im1['region'] = ['R'+f'{region:02}' for region in im['Codigo region']]
     im2['region'] = ['R'+f'{region:02}' for region in im['Codigo region']]
     im1['comuna'] = [comuna for comuna in im['Comuna']]
     im2['comuna'] = [comuna for comuna in im['Comuna']]
     marzo['IM'] = [np.mean(im[im['Comuna']==comuna].loc[im[im['Comuna']==comuna].index[0],'2020-03-09':'2020-03-15']) for comuna in im['Comuna']]
-    im1['IM'] = [np.mean(im[im['Comuna']==comuna].loc[im[im['Comuna']==comuna].index[0],'2020-08-17':'2020-08-23']) for comuna in im['Comuna']]
-    im2['IM'] = [np.mean(im[im['Comuna']==comuna].loc[im[im['Comuna']==comuna].index[0],'2020-08-24':'2020-08-30']) for comuna in im['Comuna']]
+    im1['IM'] = [np.mean(im[im['Comuna']==comuna].loc[im[im['Comuna']==comuna].index[0],prev_dates[0]:prev_dates[1]]) for comuna in im['Comuna']]
+    im2['IM'] = [np.mean(im[im['Comuna']==comuna].loc[im[im['Comuna']==comuna].index[0],last_dates[0]:last_dates[1]]) for comuna in im['Comuna']]
     im1['remanente'] = [100*im1.loc[i, 'IM']/marzo.loc[i, 'IM'] for i in range(len(im['Comuna']))]
     im2['remanente'] = [100*im2.loc[i, 'IM']/marzo.loc[i, 'IM'] for i in range(len(im['Comuna']))]
     im1.index += 1
     im2.index += 1
-    im_dates = '24/08-30/08'
+
+    month1, day1 = im.columns[-7][5:].split('-')
+    month2, day2 = im.columns[-1][5:].split('-')
+
+    im_dates = day1+'/'+month1+'-'+day2+'/'+month2
     return im1, im2, im_dates
 
-def active_cases_from_db():
+def active_cases_from_db(slicing_date = None):
     # not yet
     endpoint = 'https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/output/producto19/CasosActivosPorComuna_std.csv'
     data_comunas = pd.read_csv(endpoint)
     data_comunas = data_comunas.fillna(0)
     data_comunas['Region'] = data_comunas['Region'].replace( region_names_dict)
+
+    if slicing_date is not None:
+        year, month, day = slicing_date.split('-')
+        weekday =  dtime.datetime(int(year), int(month), int(day)).weekday()
+        if weekday>=0 and weekday<4: # nearest Tu
+            dif = weekday#-1
+        else:
+            dif = weekday-4
+        data_day = dtime.datetime(2020, 9, 21) - dtime.timedelta(days=dif)
+
+        slice_index = data_comunas.index[data_comunas['Fecha'] == data_day.strftime("%Y-%m-%d")].tolist()[0]
+        data_comunas = data_comunas.iloc[:slice_index]
+        print('dc:' ,data_comunas, data_day.strftime("%y-%m-%d"), data_comunas.index[data_comunas['Fecha'] == data_day.strftime("%Y-%m-%d")].tolist())
+
     return data_comunas
 
-def deaths_comunas_from_db():
+def deaths_comunas_from_db(slicing_date = None):
     endpoint2 = 'https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/output/producto38/CasosFallecidosPorComuna_std.csv'
     muertos_comunas = pd.read_csv(endpoint2)
     muertos_comunas = muertos_comunas.fillna(0)
     muertos_comunas['Region'] = muertos_comunas['Region'].replace( region_names_dict)
+
+    if slicing_date is not None:
+        year, month, day = slicing_date.split('-')
+        weekday =  dtime.datetime(int(year), int(month), int(day)).weekday()
+        if weekday>=0 and weekday<4: # nearest Tu
+            dif = weekday#-1
+        else:
+            dif = weekday-4
+        data_day = dtime.datetime(2020, 9, 21) - dtime.timedelta(days=dif)
+
+        slice_index = data_comunas.index[muertos_comunas['Fecha'] == data_day.strftime("%Y-%m-%d")].tolist()[0]
+        muertos_comunas = muertos_comunas.iloc[:slice_index]
+
     return muertos_comunas
+
+def population_from_db():
+
+
+    pop =pd.read_json('http://192.168.2.223:5006/getComunas')
+    pop = pop[['state', 'state_name', 'county', 'county_name', 'province_name', 'male_pop', 'female_pop', 'total_pop']]
+    #counties_info.index = counties_info['county'].astype(str).apply(lambda x:x.zfill(5))
+    pop = pop.set_index('county_name')
+
+    pop_reg = pop.pivot_table(index='state_name', values=['total_pop', 'male_pop', 'female_pop'], aggfunc=sum)
+    return pop, pop_reg
