@@ -1,0 +1,36 @@
+body, html {
+    margin: 0;
+    font-family: sans-serif;
+}
+
+.content {
+    margin: 0 auto;
+    width: 600px;
+}
+
+table, td, th {
+    border: 2px solid #aaa;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+th {
+    height: 30px;
+    /* width: 40px; */
+}
+
+td {
+    text-align: center;
+    padding: 10px;
+}
+
+#something {
+    margin-top: 560px;
+}
+
+#content {
+    width: 70%;
+}

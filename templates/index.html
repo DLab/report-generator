@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<title>Generador de Reporte</title>
+{% endblock %}
+
+{% block body %}
+<div class="content">
+    <h1 style="text-align: center">Generador de Reporte</h1>
+    <h3 style="text-align: center">Fecha de reporte seleccionada: {{tasks[0].user_date}}</h3>
+    {% if tasks|length < 1 %}
+    <h4 style="text-align: center">There is no report. Check the the last update date of the database and create one below if needed !</h4>
+    {% else %}
+    <table>
+        <tr>
+            <th> R efectivo</th>
+            <th> Camas </th>
+            <th> Fecha de reporte [opcional]</th>
+            <th> Acción </th>
+        </tr>
+        {% for task in tasks %}
+            <tr>
+                <td>{{ task.r_date }}</td>
+                <td>{{ task.s_date }}</td>
+                <td>
+
+                  <form action="/" method="POST">
+                    <label for="start">To:</label>
+                    <input type="date" id="start" name = "user_selection" min="2020-06-01" max={{task.report_date.replace("_", "-")}} />
+                    <p>
+                      <button>Submit</button>
+                    </p>
+                  </td>
+                <td>
+                    <a href="/reportegenerator/{{task.user_date}}"> Generar Reporte </a>
+                    <!-- report_date -->
+                    <!-- value= {{ task.r_date.replace("/", "-")}}  -->
+                    <br>
+                    <a href="/Anexo/{{task.report_date}}">Generar Anexo</a>
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+    {% endif %}
+
+    <div class="something">
+      <h5 style="text-align: left">Las fechas corresponden a la fecha del dato mas nuevo en la base de datos.</h5>
+      <h5 style="text-align: left">La fecha del reporte mas actual realizable siempre es un día después del último dato de R efectivo</h5>
+
+    </div>
+</div>
+{% endblock %}
