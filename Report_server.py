@@ -63,15 +63,26 @@ def reporte_generator(date = None):
 #a
 @app.route('/Anexo/<date>', methods=['GET'])
 def Anexo(date):
-    year, month, day = date.split('_')
-    name = 'Anexo_'+day+'_'+month+'.zip'
+    if date is not None:
+        if date == 'latest':
+            day, month = report_date()[1].split('/')
+            date = '2021-'+month+'-'+day
+        else:
+            year, month, day = date.split('-')
+    else:
+        month, day = date.split('_')
+        date = None
+    
     if request.method == 'GET':
+        name = 'Anexo_'+day+'_'+month+'.zip'
+        if date == 'latest':
+            plot_anexo_comunas(r_comunas_db(), day+'/'+month)
+            return send_from_directory(app.config["anexos"], filename=name, as_attachment=True)
+
         try:
             return send_from_directory(app.config["anexos"], filename=name, as_attachment=True)
 
-
         except:
-
             plot_anexo_comunas(r_comunas_db(), day+'/'+month)
             return send_from_directory(app.config["anexos"], filename=name, as_attachment=True)
 
