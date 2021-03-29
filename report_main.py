@@ -271,6 +271,7 @@ def report_gen(slice_date = None):
     reporte.add_cover(report_day, delta)
     reporte.add_summary(reg_display, prevalencia_region, region_avg_rate, subrep,data, uci_data, report_day, chile_prvlnc, chile_avg_rate, subrep_national, erre_national)
     reporte.add_national_page(erre_national, chile_avg_rate, chile_prvlnc, subrep_national, activos, report_day)
+    reporte.add_underreporting_page(subrep_national, report_day)
     reporte.add_regiones_page(report_day, pop, display, display_values, reg_display, reg_display_values, data, subrep, region_avg_rate,prevalencia_region, comun_per_region, muni_raw1, muni_raw2 ,weekly_prev1, weekly_prev2, R_arrow_past,R_arrow_last, death_rate1,death_rate2)
     reporte.add_metropolitana_page(report_day, pop, display, display_values, reg_display, reg_display_values, data, subrep, region_avg_rate,prevalencia_region, comun_per_region, muni_raw1, muni_raw2 ,weekly_prev1, weekly_prev2, R_arrow_past,R_arrow_last,death_rate1,death_rate2)
     reporte.add_otras_provincias_page(report_day, pop, display, display_values, reg_display, reg_display_values, data, subrep, region_avg_rate,prevalencia_region, comun_per_region, muni_raw1, muni_raw2 ,weekly_prev1, weekly_prev2, R_arrow_past,R_arrow_last,death_rate1,death_rate2)
