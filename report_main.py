@@ -256,7 +256,7 @@ def report_gen(slice_date = None):
             reg_display.iloc[i,reg_display.columns.get_loc('R_e')] = 'ND'
     ## guardamos el display en 2 formatos
     display.to_csv('Tables/display_{}.csv'.format(report_day.replace('/','_')))
-    generate_table('Tables/display_{}.csv'.format(report_day.replace('/','_')))
+    #generate_table('Tables/display_{}.csv'.format(report_day.replace('/','_')))
     # funcion display
     ####################################################################################################
     data = erre_reg #?
