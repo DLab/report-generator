@@ -525,6 +525,25 @@ def deaths_comunas_from_db(slicing_date = None):
 
     return muertos_comunas
 
+def pcr_positivity_from_db(slicing_date = None):
+    endpoint2 = 'https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/output/producto49/Positividad_Diaria_Media_T.csv'
+    pcr_positivity = pd.read_csv(endpoint2)
+    pcr_positivity = pcr_positivity['mediamovil_positividad'].dropna(axis='index', how = 'any')
+
+    if slicing_date is not None:
+        year, month, day = slicing_date.split('-')
+        weekday =  dtime.datetime(int(year), int(month), int(day)).weekday()
+        if weekday>=0 and weekday<4: # nearest Tu
+            dif = weekday#-1
+        else:
+            dif = weekday-4
+        data_day = dtime.datetime(2020, 9, 21) - dtime.timedelta(days=dif)
+
+        slice_index = pcr_positivity.index[pcr_positivity.index == data_day.strftime("%Y-%m-%d")].tolist()[0]
+        pcr_positivity = pcr_positivity.iloc[:slice_index]
+
+    return pcr_positivity
+
 def population_from_db():
 
 
