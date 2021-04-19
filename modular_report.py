@@ -691,8 +691,10 @@ class report(object):
         for j, ind in enumerate(i):
             pos +=[dates.get_loc(ind)]
         ax2 = axs[1].twinx()
-        ax2.set_ylabel('Infectados sintomáticos activos probables', color='black', fontsize = 7)
-        p2, = ax2.plot(pos,m,color=color)
+        ax2.set_ylabel('Infectados sintomáticos activos probables TEST', color='black', fontsize = 7)
+        ax2.plot(pos,m,color=color)
+        ax2.fill_between(pos, l, h, alpha=.4, color=color)
+
         ax2.tick_params(axis='y', labelcolor='black')
         ax2.set_ylim(bottom =0)
         if len(axs[1].xaxis.get_ticklabels())%2==0:
