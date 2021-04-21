@@ -681,11 +681,11 @@ class report(object):
         axs[1].fill_between(dates, np.asarray(national_underrep['low'])*100, np.asarray(national_underrep['high'])*100, alpha=.4, color ='#006699')
         axs[1].set_ylabel('% Subreporte')
         axs[1].set_ylim([0,100])
-
+        axs[1].set_yticks(np.arange(0, 101, 10))
         axs[1].tick_params(axis='x',rotation=45)
         #plt.xticks(rotation=45)
         axs[1].tick_params(bottom=False, left=True, labelleft=True, labelbottom=True)
-        color = 'purple'
+        axs[1].grid(axis='y')
         m, l, h, i = asp_national()
         pos = []
         for j, ind in enumerate(i):
@@ -694,7 +694,7 @@ class report(object):
         ax2.set_ylabel('Infectados sintomáticos activos probables', color='black', fontsize = 7)
         ax2.plot(pos,m,color='#df4d38')
         ax2.fill_between(pos, l, h, alpha=.4, color='#df4d38')
-
+        ax2.set_yticks(np.arange(0, 300001, 30000))
         ax2.tick_params(axis='y', labelcolor='black')
         ax2.set_ylim(bottom =0)
 
