@@ -528,7 +528,7 @@ def deaths_comunas_from_db(slicing_date = None):
 def pcr_positivity_from_db(slicing_date = None):
     endpoint2 = 'https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/output/producto49/Positividad_Diaria_Media_T.csv'
     pcr_positivity = pd.read_csv(endpoint2)
-    pcr_positivity = pcr_positivity['mediamovil_positividad'].dropna(axis='index', how = 'any')
+    pcr_positivity = pcr_positivity.dropna(axis='index', how = 'any')
 
     if slicing_date is not None:
         year, month, day = slicing_date.split('-')
