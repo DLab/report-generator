@@ -653,8 +653,8 @@ class report(object):
         logofcv = mpimg.imread('logos/logo_fcv.png')
         logofinis= mpimg.imread('logos/logo_finis.png')
         sns.set_context("paper", font_scale=.6)
-        fig, axs = plt.subplots(6,1,figsize=(8.5, 13), gridspec_kw={'height_ratios': [0.5,15,0.1, 0.5,15,4.5]})
-
+        #fig, axs = plt.subplots(6,1,figsize=(8.5, 13), gridspec_kw={'height_ratios': [0.5,15,0.1, 0.5,15,4.5]})
+        fig, axs = plt.subplots(6,1,figsize=(8.5, 13), gridspec_kw={'height_ratios': [0.5,15,2, 2,15,4.5]})
         fig.text(0.9,0.04, '©2020, Laboratorio de Biología Computacional, Fundación Ciencia & Vida', ha='right')
         ax_logo = fig.add_axes([.8,.868,.1*1.2,.1*1.2])
         ax_logo.imshow(self.logofcv)
@@ -674,11 +674,11 @@ class report(object):
         axs[0].axis('off')
         axs[2].axis('off')
         axs[3].axis('off')
-        axs[4].axis('off')
+        #axs[4].axis('off')
         axs[5].axis('off')
         dates = pd.to_datetime(national_underrep['date']).strftime('%y-%m-%d')
-        axs[1].plot(dates, np.asarray(national_underrep['mean'])*100)
-        axs[1].fill_between(dates, np.asarray(national_underrep['low'])*100, np.asarray(national_underrep['high'])*100, alpha=.4)
+        axs[1].plot(dates, np.asarray(national_underrep['mean'])*100, color ='#006699')
+        axs[1].fill_between(dates, np.asarray(national_underrep['low'])*100, np.asarray(national_underrep['high'])*100, alpha=.4, color ='#006699')
         axs[1].set_ylabel('% Subreporte')
         axs[1].set_ylim([0,100])
 
@@ -691,17 +691,53 @@ class report(object):
         for j, ind in enumerate(i):
             pos +=[dates.get_loc(ind)]
         ax2 = axs[1].twinx()
-        ax2.set_ylabel('Infectados sintomáticos activos probables TEST', color='black', fontsize = 7)
-        ax2.plot(pos,m,color=color)
-        ax2.fill_between(pos, l, h, alpha=.4, color=color)
+        ax2.set_ylabel('Infectados sintomáticos activos probables', color='black', fontsize = 7)
+        ax2.plot(pos,m,color='#df4d38')
+        ax2.fill_between(pos, l, h, alpha=.4, color='#df4d38')
 
         ax2.tick_params(axis='y', labelcolor='black')
         ax2.set_ylim(bottom =0)
+
+
+        positivity = pcr_positivity_from_db() # take out
+        dates = pd.to_datetime(positivity['Fecha'].values)
+        dates = dates.strftime('%y-%m-%d')
+        p2, = axs[4].plot(dates, 100*positivity['positividad'].values, color='#f49819')
+        p1, = axs[4].plot(dates, 100*positivity['mediamovil_positividad'].values, color='#000000')
+        axs[4].set_ylabel('Positividad PCR %', color='black', fontsize = 7)
+        pos = []
+        print('arrived', flush=True)
+        axs[4].grid(axis='y')
+        axs[4].set_yticks(np.arange(0, 101, 10))
+        print('arrived', flush=True)
+        for j, ind in enumerate(i):
+                pos +=[dates.get_loc(ind)]
+
+        ax3 = axs[4].twinx()
+        p3, = ax3.plot(pos, m, color='#df4d38')
+        ax3.set_ylabel('Infectados sintomáticos activos probables', color='black', fontsize = 7)
+        ax3.fill_between(pos, l, h, alpha=.4, color='#df4d38')
+        ax3.set_yticks(np.arange(0, 300001, 30000))
+        print('arrived', flush=True)
+        ax3.set_ylim(bottom = 0)
+        axs[3].legend([p1, p2, p3],["Positividad PCR media movil 7 días", "Positividad PCR diaria", "Casos activos probables"], bbox_to_anchor=(0.37,0.75), fontsize = 8)
+        axs[3].set_title('Casos activos probables y positividad diaria de exámenes PCR a nivel nacional',loc='center', weight = 'bold', fontsize = 8)
+
+        axs[4].tick_params(axis='x',rotation=45)
+        axs[4].tick_params(bottom=False, left=True, labelleft=True, labelbottom=True)
+
         if len(axs[1].xaxis.get_ticklabels())%2==0:
             every_nth = 14
         elif len(axs[1].xaxis.get_ticklabels())%2==1:
             every_nth = 14
         for n, label in enumerate(axs[1].xaxis.get_ticklabels()):
+                if n % every_nth != 0:
+                    label.set_visible(False)
+        if len(axs[4].xaxis.get_ticklabels())%2==0:
+            every_nth = 14
+        elif len(axs[4].xaxis.get_ticklabels())%2==1:
+            every_nth = 14
+        for n, label in enumerate(axs[4].xaxis.get_ticklabels()):
                 if n % every_nth != 0:
                     label.set_visible(False)
 
