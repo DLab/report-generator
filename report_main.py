@@ -228,9 +228,8 @@ def report_gen(slice_date = None):
     ########################## Formateando tabla para visualización ############################
     display_values = display.copy()
     reg_display_values = reg_display.copy()
-    display['Prevalencia'] = display['Prevalencia'].map('{:.2f}'.format)
-    display['Tasa'] = display['Tasa'].map('{:,.2%}'.format)    # filenames.append(Nacional_page(pd.read_csv('time_series/R_Efectivo_nacional_'+report_day.replace('/','_')+'.csv'), chile_avg_rate, chile_prvlnc, subrep, activos, report_day))
-
+    display['Prevalencia'] = display['Prevalencia'].map('{:,.2f}'.format)
+    display['Tasa'] = display['Tasa'].map('{:,.2f}'.format)
     display['R_e'] = display['R_e'].map('{:,.2f}'.format)
     display['Inf. Activos'] = display['Inf. Activos'].map('{:,.0f}'.format)
     display['Mortalidad'] = display['Mortalidad'].map('{:,.2f}'.format)
