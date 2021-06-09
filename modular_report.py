@@ -9,6 +9,7 @@ import locale
 from math import ceil
 import gc
 import os
+from zipfile import ZipFile
 
 #from report_utils import *
 from report_data_loader import *
@@ -24,6 +25,7 @@ class report(object):
         self.predefined_types = ['national', 'state', 'summary', 'cover']
         self.slicing_date = None
         self.simulate_report = False
+        self.date = date
         self.pdf = PdfPages('reporte_'+date+'.pdf')#formatear
         self.logos = mpimg.imread('logos/uss_cinv_udd.png')
         self.logo_sochimi = mpimg.imread('logos/logo_sochimi.png')
@@ -31,10 +33,6 @@ class report(object):
         self.logofcv = mpimg.imread('logos/logo_fcv.png')
         self.logofinis= mpimg.imread('logos/logo_finis.png')
 
-    def add_page(self, function, **kwargs):
-        if type in sel.predefined_types:
-            self.temporal_pdf()
-            self.pages.add("type"+date)
 
     def current_r_date():
         endpoint_R = requests.get('http://192.168.2.223:5006/getNationalEffectiveReproduction' )
@@ -95,6 +93,7 @@ class report(object):
         axmain.text(.5,.15, affiliations, ha='center', fontsize='small')
 
         figcover.savefig(self.pdf, format='pdf', dpi=600)
+        plt.savefig('cover.png', format='png', dpi=600)
         pass
 
     def add_otras_provincias_page(self,report_day, pop, display, display_values, reg_display, reg_display_values, data, subrep, region_avg_rate,prevalencia_region, comun_per_region, muni_raw1, muni_raw2 ,weekly_prev1, weekly_prev2, R_arrow_past,R_arrow_last,death_rate1,death_rate2 ):
@@ -217,128 +216,128 @@ class report(object):
             if n % every_nth != 0:
                 label.set_visible(False)
 
-        filename = 'Report/Report_{}_RP{}.pdf'.format(report_day.replace('/','_'), r+1)
-        fig.savefig(self.pdf, format='pdf', dpi=1200) # faltan reg display y sus copias values
+        fig.savefig(self.pdf, format='pdf', dpi=1200)
+        plt.savefig('otras_provincias.png', format = 'png', dpi = 600)
         pass
 
 
 
 
 
-        # FOR TABLES
-        def color_epi(data14, data7,data1):
-            if data14 <= .8:
-                if data7 <= .8:
-                    color = '#00cc66'
-                elif data7 >.8:
-                    color = '#27AE60'
-
-
-            elif data14 < 1.00:
-                if data7 <= .8:
-                    color = '#FFF333'
-                elif data7 < 1.00 and data1<1:
-                    color = '#FFF333'
-                elif data7 < 1.00 and data1>=1 :
-                    color = '#E3B500'
-                elif data7>=1:
-                    color = '#E3B500'
-
-            else:
-                if data7 <= data14:
-                    color = '#DE2F2A'
-                elif  data7 > data14:
-                    color = '#A71B08'
-
-            return color
-
-
-        def color_rate_summary(data):
-            if data <= .25: color = '#00cc66'
-            elif (data < .30): color = '#FFF333'
-            else: color = '#DE2F2A'
-            return color
-
-        def color_r0_summary(data):
-            if data == 0.0: color = 'w'
-            elif data <= .8: color = '#00cc66'
-            elif data < 1.00: color = '#FFF333'
-            else: color = '#DE2F2A'
-            return color
-
-        def color_prvlnc_summary(data):
-            if data <= 4.: color = '#00cc66'
-            elif data < 5.: color = '#FFF333'
-            else: color = '#DE2F2A'
-            return color
-
-        def color_underreporting_summary(data):
-            if data =='N':
+    # FOR TABLES
+    def color_epi(data14, data7,data1):
+        if data14 <= .8:
+            if data7 <= .8:
                 color = '#00cc66'
-            elif float(data) == 0:
-                color = '#00cc66'
-            elif float(data) < 10:
-                color = '#FFF333'
-            else:
-                color = '#DE2F2A'
-            return color
-
-        def color_camas(data):#23, 41, 58
-            if data <= .25: color = '#00cc66'
-            elif data < .75: color = '#FFF333'
-            elif data < .85: color = '#E3B500'
-            else: color = '#DE2F2A'
-            return color
-
-        def color_hos_sit(data_uti, data_uci, data_vmi):#23, 41, 58
-            v = len([1 for data in [data_uti, data_uci, data_vmi] if data <= .25 ])
-            a = len([1 for data in [data_uti, data_uci, data_vmi] if data <  .75 ])
-            r = len([1 for data in [data_uti, data_uci, data_vmi] if data >= .75 ])
-
-            if r>=2:
-                color = '#DE2F2A'
-            elif a == 2 and r == 1:
-                color = '#E3B500'
-            elif a == 2 and v == 1:
-                color = '#FFF333'
-            elif a == 3 :
-                color = '#FFF333'
-            elif v == 2 :
+            elif data7 >.8:
                 color = '#27AE60'
-            elif v == 3:
-                color = '#00cc66'
-            return color
 
-        def color_rate(data):
-            if data <= .25: color = '#00cc66'
-            elif (data < .30): color = '#ffcc00'
-            else: color = '#ff0000'
-            return color
 
-        def color_prvlnc(data):
-            if data <= 4.: color = '#00cc66'
-            elif data < 5.: color = '#ffcc00'
-            else: color = 'red'
-            return color
+        elif data14 < 1.00:
+            if data7 <= .8:
+                color = '#FFF333'
+            elif data7 < 1.00 and data1<1:
+                color = '#FFF333'
+            elif data7 < 1.00 and data1>=1 :
+                color = '#E3B500'
+            elif data7>=1:
+                color = '#E3B500'
 
-        def color_r0(data):
-            if data == 0.0: color = 'w'
-            elif data <= .8: color = '#00cc66'
-            elif data < 1.00: color = '#ffcc00'
-            else: color = 'red'
-            return color
+        else:
+            if data7 <= data14:
+                color = '#DE2F2A'
+            elif  data7 > data14:
+                color = '#A71B08'
 
-        def color_im(data):
-            if data <= 2.: color = '#00cc66'
-            elif data < 4.: color = '#ffcc00'
-            else: color = 'red'
-            return color
+        return color
 
-        def color_dim(data):#23, 41, 58
-            if data <= .3: color = '#00cc66'
-            elif data < .4: color = '#ffcc00'
-            else: color = '#ff0000'
-            return color
+
+    def color_rate_summary(data):
+        if data <= .25: color = '#00cc66'
+        elif (data < .30): color = '#FFF333'
+        else: color = '#DE2F2A'
+        return color
+
+    def color_r0_summary(data):
+        if data == 0.0: color = 'w'
+        elif data <= .8: color = '#00cc66'
+        elif data < 1.00: color = '#FFF333'
+        else: color = '#DE2F2A'
+        return color
+
+    def color_prvlnc_summary(data):
+        if data <= 4.: color = '#00cc66'
+        elif data < 5.: color = '#FFF333'
+        else: color = '#DE2F2A'
+        return color
+
+    def color_underreporting_summary(data):
+        if data =='N':
+            color = '#00cc66'
+        elif float(data) == 0:
+            color = '#00cc66'
+        elif float(data) < 10:
+            color = '#FFF333'
+        else:
+            color = '#DE2F2A'
+        return color
+
+    def color_camas(data):#23, 41, 58
+        if data <= .25: color = '#00cc66'
+        elif data < .75: color = '#FFF333'
+        elif data < .85: color = '#E3B500'
+        else: color = '#DE2F2A'
+        return color
+
+    def color_hos_sit(data_uti, data_uci, data_vmi):#23, 41, 58
+        v = len([1 for data in [data_uti, data_uci, data_vmi] if data <= .25 ])
+        a = len([1 for data in [data_uti, data_uci, data_vmi] if data <  .75 ])
+        r = len([1 for data in [data_uti, data_uci, data_vmi] if data >= .75 ])
+
+        if r>=2:
+            color = '#DE2F2A'
+        elif a == 2 and r == 1:
+            color = '#E3B500'
+        elif a == 2 and v == 1:
+            color = '#FFF333'
+        elif a == 3 :
+            color = '#FFF333'
+        elif v == 2 :
+            color = '#27AE60'
+        elif v == 3:
+            color = '#00cc66'
+        return color
+
+    def color_rate(data):
+        if data <= .25: color = '#00cc66'
+        elif (data < .30): color = '#ffcc00'
+        else: color = '#ff0000'
+        return color
+
+    def color_prvlnc(data):
+        if data <= 4.: color = '#00cc66'
+        elif data < 5.: color = '#ffcc00'
+        else: color = 'red'
+        return color
+
+    def color_r0(data):
+        if data == 0.0: color = 'w'
+        elif data <= .8: color = '#00cc66'
+        elif data < 1.00: color = '#ffcc00'
+        else: color = 'red'
+        return color
+
+    def color_im(data):
+        if data <= 2.: color = '#00cc66'
+        elif data < 4.: color = '#ffcc00'
+        else: color = 'red'
+        return color
+
+    def color_dim(data):#23, 41, 58
+        if data <= .3: color = '#00cc66'
+        elif data < .4: color = '#ffcc00'
+        else: color = '#ff0000'
+        return color
 
     def add_regiones_page(self, report_day, pop, display, display_values, reg_display, reg_display_values, data, subrep, region_avg_rate,prevalencia_region, comun_per_region, muni_raw1, muni_raw2 ,weekly_prev1, weekly_prev2, R_arrow_past,R_arrow_last,death_rate1,death_rate2):
 
@@ -513,6 +512,7 @@ class report(object):
 
             filename = 'Report/Report_{}_RP{}.pdf'.format(report_day.replace('/','_'), r)
             fig.savefig(self.pdf, format='pdf', dpi=1200)
+            plt.savefig('region'+region+'.png', format = 'png', dpi = 600)
 
         pass
 
@@ -644,6 +644,7 @@ class report(object):
 
         filename = 'Report/Report_{}_RP{}.pdf'.format(report_day.replace('/','_'), r)
         fig.savefig(self.pdf, format='pdf', dpi=1200)
+        plt.savefig('metropolitana.png', format = 'png', dpi = 600)
         pass
 
     def add_underreporting_page(self, national_underrep, report_day):
@@ -747,6 +748,7 @@ class report(object):
         # fig.subplots_adjust(hspace=.5, top = 0.84)
         filename = 'Report/Report_{}_national_underrep.pdf'.format(report_day.replace('/','_'))
         fig.savefig(self.pdf, format='pdf', dpi=1200)
+        plt.savefig('subreporte.png', format = 'png', dpi = 600)
         pass
 
     def add_summary(self, reg_data, prevalencia_region, region_avg_rate, subr, R_reg,hs_occupation, report_date, national_prev, national_rate, national_underreporting, national_r):
@@ -1007,6 +1009,7 @@ class report(object):
                 cellDict3[(i,-1)].set_height(.03)
 
         fig.savefig(self.pdf, format='pdf', dpi=1200)
+        plt.savefig('summary.png', format = 'png', dpi = 600)
         pass
 
     def add_national_page(self, result, chile_avg_rate, chile_prvlnc, subrep, activos,report_day):
@@ -1132,11 +1135,28 @@ class report(object):
         # fig.subplots_adjust(hspace=.5, top = 0.84)
         filename = 'Report/Report_{}_RP18.pdf'.format(report_day.replace('/','_'))
         fig.savefig(self.pdf, format='pdf', dpi=1200)
-
+        plt.savefig('nacional.png', format = 'png', dpi = 600)
         pass
 
     def end_pages(self):
+        # closing pdf file
         self.pdf.close()
+        # Compressing png files
+        self.compress_pngs_pdf()
+
+        pass
+
+    def compress_pngs_pdf(self):
+        files = ['reporte_'+self.date+'.pdf']#[file in os.listdir('./') if file.endswith('.png')]
+        for file in os.listdir("./"):
+            if file.endswith(".png"):
+                files.append(file)
+        zipobj = ZipFile('reporte_'+self.date+".zip", 'w')
+        for png_files in files:
+        	zipobj.write(png_files)
+        zipobj.close()
+        for png_files in files:
+            os.remove(png_files)
         pass
 
     def _make_table(self, datos, values, total, total_values, ax, label=True):
