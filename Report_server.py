@@ -12,6 +12,7 @@ app = Flask(__name__)
 
 app.config["reportes"] ='/reports/'
 app.config["anexos"] = '/reports/'
+app.config["pngs"] = '/reports/'
 # request.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, public, max-age=0"
 @app.after_request
 def add_header(response):
@@ -48,12 +49,12 @@ def reporte_generator(date = None):
         pass
 
     if request.method == 'GET':
-        name = 'reporte_'+day+'_'+month+'.pdf'
+        name = 'reporte_'+day+'_'+month+'.zip'
         if date == 'latest':
             report_gen(date)
             return send_from_directory(app.config["reportes"], filename=name, as_attachment=True)
 
-        if path.exists('reporte_'+day+'_'+month+'.pdf'):
+        if path.exists('reporte_'+day+'_'+month+'.zip'):
 
             return send_from_directory(app.config["reportes"], filename=name, as_attachment=True)
 
@@ -72,7 +73,7 @@ def Anexo(date):
     else:
         month, day = date.split('_')
         date = None
-    
+
     if request.method == 'GET':
         name = 'Anexo_'+day+'_'+month+'.zip'
         if date == 'latest':
@@ -85,6 +86,7 @@ def Anexo(date):
         except:
             plot_anexo_comunas(r_comunas_db(), day+'/'+month)
             return send_from_directory(app.config["anexos"], filename=name, as_attachment=True)
+
 
 class web_report(object):
     """docstring for web_report."""
