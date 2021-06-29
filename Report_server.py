@@ -69,7 +69,7 @@ def Anexo(date):
             day, month = report_date()[1].split('/')
             date = '2021-'+month+'-'+day
         else:
-            year, month, day = date.split('-')
+            year, month, day = date.split('_')
     else:
         month, day = date.split('_')
         date = None
