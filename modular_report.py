@@ -705,8 +705,8 @@ class report(object):
         positivity = pcr_positivity_from_db() # take out
         dates = pd.to_datetime(positivity['Fecha'].values)
         dates = dates.strftime('%y-%m-%d')
-        p2, = axs[5].plot(dates, 100*positivity['positividad'].values, color='#f49819')
-        p1, = axs[5].plot(dates, 100*positivity['mediamovil_positividad'].values, color='#000000')
+        p2, = axs[5].plot(dates, 100*positivity['positividad pcr'].values, color='#f49819')
+        p1, = axs[5].plot(dates, 100*positivity['mediamovil_positividad_pcr'].values, color='#000000')
         axs[5].set_ylabel('Positividad PCR %', color='black', fontsize = 7)
         pos = []
         print('arrived', flush=True)
