@@ -401,7 +401,7 @@ class report(object):
 
             ## Encabezado
             fig.text(.5, .935, 'Región de ' + regiones[r], horizontalalignment='center', verticalalignment='center', weight = 'bold', fontsize='xx-large')
-            if region in subrep.index:
+            if region in subrep.index and region != "Aysén del General Carlos Ibáñez del Campo":
                 reg_num = inv_map[region]
                 dates = pd.to_datetime(underreporting[reg_num]['date']).strftime('%d/%m/%y')
                 mean = (1-underreporting[reg_num]['mean'][-1]) #reporte
@@ -487,7 +487,7 @@ class report(object):
             ax2.set_ylabel('R efectivo')
             ax2.set_ylim([0,3])
     	    # if data != None
-            if region in subrep.index:
+            if region in subrep.index and region !="Aysén del General Carlos Ibáñez del Campo":
                 ax3 = fig.add_axes([.645, .335, .3, .22])
                 ax3.plot(dates,np.asarray(underreporting[reg_num]['mean'])*100)
                 ax3.fill_between(dates,np.asarray(underreporting[reg_num]['low'])*100,np.asarray(underreporting[reg_num]['high'])*100, alpha=0.4)
@@ -1429,10 +1429,10 @@ class report(object):
 
         first_column = first_column.reindex(regions)
         second_column = second_column.reindex(regions)
-
         subrep = subrep.rename(index={'Arica y Parinacota':'Arica', 'Aysén del General Carlos Ibáñez del Campo':'Aysén',
         'Biobío':'Bio-Bío',"Libertador General Bernardo O'Higgins":"O'Higgins", 'Magallanes y de la Antártica Chilena': 'Magallanes',
         'Metrolitana de Santiago':'Metropolitana'})
+        subrep = subrep.drop('Aysén')
         third_column = pd.DataFrame(data = [subrep['mean'][i][-1]-subrep['mean'][i][-7] for i in subrep.index],index= subrep.index, columns = ['mean'])
         third_column = pd.concat([third_column, pd.DataFrame(data = [0], index = ['Aysén'],    columns = ['mean'])])
         third_column = pd.concat([third_column, pd.DataFrame(data = [subrep_nac['mean'][-1]-subrep_nac['mean'][-7]], index = ['Nacional'], columns = ['mean'])])

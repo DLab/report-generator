@@ -188,7 +188,7 @@ def report_gen(slice_date = None):
     for r in reg_display.index:
         infected = data_region.loc[r].iloc[-1].values[0]
         reg_display.loc[r,'Inf. Activos'] = infected
-        if r in subrep.index:
+        if r in subrep.index and r !="Aysén del General Carlos Ibáñez del Campo":
             high = (1-subrep.high[r][-1])
             if high>1: high = 1
             low = (1-subrep.low[r][-1])
