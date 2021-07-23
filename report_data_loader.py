@@ -285,28 +285,44 @@ def color_im(data):
     else: color = 'red'
     return color
 
-def underreporting_by_region():
-	endpoint = 'http://192.168.2.223:5006/getNewCasesUnderreportByState'
-	req_end = requests.get(endpoint)
-	data_ = json.loads(req_end.text)
-	data = data_['data']
-	return data
+def underreporting_by_region(slice_date = None):
+    endpoint = 'http://192.168.2.223:5006/getNewCasesUnderreportByState'
+    req_end = requests.get(endpoint)
+    data_ = json.loads(req_end.text)
+    data = data_['data']
+    data = pd.DataFrame(data).T
+    if slice_date is not None:
+        dates=pd.DataFrame(data.loc['10']['date']).apply(__iso_handler, axis =1)
+        date_index = int(np.argwhere(dates.values == slice_date))
+        for ind in data.index:
+            data.loc[ind]['date'] = data.loc[ind]['date'][:date_index]
+            data.loc[ind]['mean'] = data.loc[ind]['mean'][:date_index]
+            data.loc[ind]['low']  = data.loc[ind]['low'][:date_index]
+            data.loc[ind]['high'] = data.loc[ind]['high'][:date_index]
+    return data
 
-def underreporting_national():
+def underreporting_national(slice_date = None):
         endpoint = 'http://192.168.2.223:5006/getNationalNewCasesUnderreport'
         req_end = requests.get(endpoint)
         data = json.loads(req_end.text)
-        #data = data_['data']
+        if slice_date is not None:
+            dates=pd.DataFrame(data['date']).apply(__iso_handler, axis =1)
+            date_index = int(np.argwhere(dates.values == slice_date))
+            data['date'] = data['date'][:date_index]
+            data['mean'] = data['mean'][:date_index]
+            data['low']  = data['low'][:date_index]
+            data['high'] = data['high'][:date_index]
         return data
 
-def asp_national():
+def asp_national(national_underrep):
     endpoint = 'http://192.168.2.223:5006/getActiveCasesAllComunas'
     req_end = requests.get(endpoint)
     data_ = json.loads(req_end.text)
     #data = data_['data']
-    endpoint2 = 'http://192.168.2.223:5006/getNationalNewCasesUnderreport'
-    req_end2 = requests.get(endpoint2)
-    data_2 = json.loads(req_end2.text)
+    # endpoint2 = 'http://192.168.2.223:5006/getNationalNewCasesUnderreport'
+    # req_end2 = requests.get(endpoint2)
+    # data_2 = json.loads(req_end2.text)
+    data_2 = national_underrep
 
     active_nat =np.sum(pd.DataFrame(data_['data']), axis = 1)
     under_nat = pd.DataFrame(data_2, index = data_2['date']).drop(columns = 'date')
@@ -326,19 +342,19 @@ def asp_national():
     asp_data_high = [active_nat[ind]/(1-under_nat['low'][ind]) for ind in index]
     return asp_data_mean, asp_data_low, asp_data_high,index
 
-def asp_state(state):
+def asp_state(state, underreporting):
     '''
     State must be a zero padded string
     '''
     endpoint = 'http://192.168.2.223:5006/getActiveCasesAllComunasByState?state='+state
     req_end = requests.get(endpoint)
     data_ = json.loads(req_end.text)
-    data_2 = underreporting_by_region()[state]
+    data_2 = underreporting.loc[state].to_frame().T
 
     active_nat =np.sum(pd.DataFrame(data_['data']), axis = 1)
-    under_nat = pd.DataFrame(data_2, index = data_2['date']).drop(columns = 'date')
+    under_nat = pd.DataFrame(data = {'low':data_2['low'][0], 'mean':data_2['mean'][0], 'high':data_2['high'][0]}, index = data_2['date'][0])#.drop(columns = 'date')
     active_date_dt = pd.to_datetime(data_['dates'])
-    under_date_dt = pd.to_datetime(data_2['date'])
+    under_date_dt = pd.to_datetime(data_2['date'][0])
 
     active_date_human = active_date_dt.strftime('%d/%m/%y')
     under_date_human = under_date_dt.strftime('%d/%m/%y')
@@ -501,7 +517,7 @@ def active_cases_from_db(slicing_date = None):
 
         slice_index = data_comunas.index[data_comunas['Fecha'] == data_day.strftime("%Y-%m-%d")].tolist()[0]
         data_comunas = data_comunas.iloc[:slice_index]
-        print('dc:' ,data_comunas, data_day.strftime("%y-%m-%d"), data_comunas.index[data_comunas['Fecha'] == data_day.strftime("%Y-%m-%d")].tolist())
+        #print('dc:' ,data_comunas, data_day.strftime("%y-%m-%d"), data_comunas.index[data_comunas['Fecha'] == data_day.strftime("%Y-%m-%d")].tolist())
 
     return data_comunas
 
@@ -520,7 +536,7 @@ def deaths_comunas_from_db(slicing_date = None):
             dif = weekday-4
         data_day = dtime.datetime(2020, 9, 21) - dtime.timedelta(days=dif)
 
-        slice_index = data_comunas.index[muertos_comunas['Fecha'] == data_day.strftime("%Y-%m-%d")].tolist()[0]
+        slice_index = muertos_comunas.index[muertos_comunas['Fecha'] == data_day.strftime("%Y-%m-%d")].tolist()[0]
         muertos_comunas = muertos_comunas.iloc[:slice_index]
 
     return muertos_comunas
@@ -706,7 +722,6 @@ def hospitales_reg():
     HEALTH_SERVICE_newest = HEALTH_SERVICE_newest.drop(columns = ['Pacientes en Intensivo', 'Pacientes en Intermedio', 'Camas Intensivo', 'Camas Intermedio', 'Pacientes en VMI', 'Número VMI' ])
     HEALTH_SERVICE_prev = HEALTH_SERVICE_prev.drop(columns = ['Pacientes en Intensivo', 'Pacientes en Intermedio', 'Camas Intensivo', 'Camas Intermedio', 'Pacientes en VMI', 'Número VMI' ])
 
-    print('b', HEALTH_SERVICE_newest)
     HEALTH_SERVICE_newest = HEALTH_SERVICE_newest[['Uso Intermedias','Uso Intensivas','Uso VMI']]
     HEALTH_SERVICE_prev = HEALTH_SERVICE_prev[['Uso Intermedias','Uso Intensivas','Uso VMI']]
     return days, HEALTH_SERVICE_prev, HEALTH_SERVICE_newest

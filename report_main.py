@@ -48,13 +48,12 @@ def report_gen(slice_date = None):
     erre_reg = r_regions_db(slice_date)
     erre_national = r_national_db(slice_date)
 
-    active_comunas = active_cases_from_db() # slicing ready
+    active_comunas = active_cases_from_db(slice_date) # slicing ready
     data_region = active_comunas[active_comunas.Comuna!='Total'].pivot_table(index=['Region','Fecha'], values='Casos activos', aggfunc=sum)
-    muertos_comunas = deaths_comunas_from_db()
+    muertos_comunas = deaths_comunas_from_db(slice_date)
 
-    subrep = pd.DataFrame(underreporting_by_region()).T
-    subrep_national = underreporting_national()
-
+    subrep = underreporting_by_region(slice_date)#pd.DataFrame(underreporting_by_region()).T
+    subrep_national = underreporting_national(slice_date)
     dict = {"01":"Tarapacá",    "02":"Antofagasta",
             "03":"Atacama",     "04":"Coquimbo",
             "05":"Valparaíso",  "06":"Libertador General Bernardo O\'Higgins",

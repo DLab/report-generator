@@ -203,7 +203,7 @@ class report(object):
         ax3.tick_params(axis = 'x', rotation=45)
         ax3.tick_params(bottom=False, left=True, labelleft=True, labelbottom=True)
         color = 'purple'
-        m, l, h, i = asp_state('13')
+        m, l, h, i = asp_state(region, subrep)
         pos = []
         for j, ind in enumerate(i):
             pos +=[dates.get_loc(ind)]
@@ -403,12 +403,12 @@ class report(object):
             fig.text(.5, .935, 'Región de ' + regiones[r], horizontalalignment='center', verticalalignment='center', weight = 'bold', fontsize='xx-large')
             if region in subrep.index and region != "Aysén del General Carlos Ibáñez del Campo":
                 reg_num = inv_map[region]
-                dates = pd.to_datetime(underreporting[reg_num]['date']).strftime('%d/%m/%y')
-                mean = (1-underreporting[reg_num]['mean'][-1]) #reporte
+                dates = pd.to_datetime(underreporting.loc[reg_num]['date']).strftime('%d/%m/%y')
+                mean = (1-underreporting.loc[reg_num]['mean'][-1]) #reporte
                 if mean>1: mean = 1
-                low = (1-underreporting[reg_num]['low'][-1]) #estan al revés
+                low = (1-underreporting.loc[reg_num]['low'][-1]) #estan al revés
                 if low <0: low = 0
-                high = (1-underreporting[reg_num]['high'][-1])
+                high = (1-underreporting.loc[reg_num]['high'][-1])
                 if high > 1: high = 1
                 fig.text(.5, .9, 'Datos últimos 14 días\nPrevalencia región: {} / Tasa región: {}%\nEstimación de infectados sintomáticos detectados: {:.0f}% ({:.0f}% - {:.0f}%)'.format('{:.2f}'.format(prevalencia_region.loc[3,region]).replace('.',','), '{:.2f}'.format(region_avg_rate.loc[3,region]*100).replace('.',','), mean*100, low*100, high*100),
                      horizontalalignment='center', verticalalignment='center', weight = 'bold', fontsize='x-large')
@@ -489,14 +489,14 @@ class report(object):
     	    # if data != None
             if region in subrep.index and region !="Aysén del General Carlos Ibáñez del Campo":
                 ax3 = fig.add_axes([.645, .335, .3, .22])
-                ax3.plot(dates,np.asarray(underreporting[reg_num]['mean'])*100)
-                ax3.fill_between(dates,np.asarray(underreporting[reg_num]['low'])*100,np.asarray(underreporting[reg_num]['high'])*100, alpha=0.4)
+                ax3.plot(dates,np.asarray(underreporting.loc[reg_num]['mean'])*100)
+                ax3.fill_between(dates,np.asarray(underreporting.loc[reg_num]['low'])*100,np.asarray(underreporting.loc[reg_num]['high'])*100, alpha=0.4)
                 ax3.tick_params(axis = 'x', rotation=45)
                 ax3.set_ylim([0,100])
                 ax3.set_ylabel('% Subreporte')
                 ax3.tick_params(bottom=False, left=True, labelleft=True, labelbottom=True)
                 color = 'purple'
-                m, l, h, i = asp_state(reg_num)
+                m, l, h, i = asp_state(region, subrep)
                 pos = []
                 for j, ind in enumerate(i):
                     pos +=[dates.get_loc(ind)]
@@ -628,7 +628,7 @@ class report(object):
         ax3.set_ylabel('% Subreporte')
         ax3.tick_params(bottom=False, left=True, labelleft=True, labelbottom=True)
         color = 'purple'
-        m, l, h, i = asp_state('13')
+        m, l, h, i = asp_state(region, subrep)
         pos = []
         for j, ind in enumerate(i):
             pos +=[dates.get_loc(ind)]
@@ -688,7 +688,7 @@ class report(object):
         #plt.xticks(rotation=45)
         axs[2].tick_params(bottom=False, left=True, labelleft=True, labelbottom=True)
         axs[2].grid(axis='y')
-        m, l, h, i = asp_national()
+        m, l, h, i = asp_national(national_underrep)
         pos = []
         for j, ind in enumerate(i):
             pos +=[dates.get_loc(ind)]
@@ -709,10 +709,8 @@ class report(object):
         p1, = axs[5].plot(dates, 100*positivity['mediamovil_positividad_pcr'].values, color='#000000')
         axs[5].set_ylabel('Positividad PCR %', color='black', fontsize = 7)
         pos = []
-        print('arrived', flush=True)
         axs[5].grid(axis='y')
         axs[5].set_yticks(np.arange(0, 101, 10))
-        print('arrived', flush=True)
         for j, ind in enumerate(i):
                 pos +=[dates.get_loc(ind)]
 
@@ -721,7 +719,6 @@ class report(object):
         ax3.set_ylabel('Infectados sintomáticos activos probables', color='black', fontsize = 7)
         ax3.fill_between(pos, l, h, alpha=.4, color='#df4d38')
         ax3.set_yticks(np.arange(0, 300001, 30000))
-        print('arrived', flush=True)
         ax3.set_ylim(bottom = 0)
         axs[4].legend([p1, p2, p3],["Positividad PCR media movil 7 días", "Positividad PCR diaria", "Casos activos probables"], bbox_to_anchor=(0.37,0.75), fontsize = 8)
         axs[4].set_title('Casos activos probables y positividad diaria de exámenes PCR a nivel nacional',loc='center', weight = 'bold', fontsize = 8)
