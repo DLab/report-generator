@@ -167,9 +167,9 @@ def report_gen(slice_date = None):
         if comun_per_region[c] in subrep.index: #aqui
             infected = datos_comunas[int(pop[pop.index==c].county.values[0])].loc[3]
 
-            high = (1-subrep.high[comun_per_region[c]][-1])
+            high = (1-subrep.low[comun_per_region[c]][-1])
             if high>1: high = 1
-            low = (1-subrep.low[comun_per_region[c]][-1])
+            low = (1-subrep.high[comun_per_region[c]][-1])
             if low<0: low= 0
 
             display.loc[c,'Inf. Act. Probables'] = '{:.0f} ~ {:.0f}'.format(infected /high, infected /low)
@@ -188,9 +188,9 @@ def report_gen(slice_date = None):
         infected = data_region.loc[r].iloc[-1].values[0]
         reg_display.loc[r,'Inf. Activos'] = infected
         if r in subrep.index and r !="Aysén del General Carlos Ibáñez del Campo":
-            high = (1-subrep.high[r][-1])
+            high = (1-subrep.low[r][-1])
             if high>1: high = 1
-            low = (1-subrep.low[r][-1])
+            low = (1-subrep.high[r][-1])
             if low<0: low= 0
             reg_display.loc[r,'Inf. Act. Probables'] = '{:.0f} ~ {:.0f}'.format(infected /high, infected /low)
         else:
