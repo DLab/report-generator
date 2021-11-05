@@ -118,10 +118,10 @@ class report(object):
         r = 15
         mean = (1-subrep['mean'][region][-1]) # reporte
         if mean>1: mean = 1
-        high = (1-subrep['high'][region][-1])
-        low = (1-subrep['low'][region][-1])
+        high = (1-subrep['low'][region][-1])
+        low = (1-subrep['high'][region][-1])
         if low<0: low = 0
-        high = (1-subrep['high'][region][-1])
+        high = (1-subrep['low'][region][-1])
         if high > 1 : high = 1
 
         fig.text(.5, .935, 'Región Metropolitana: otras provincias', horizontalalignment='center', verticalalignment='center', weight = 'bold', fontsize='xx-large')
@@ -406,9 +406,9 @@ class report(object):
                 dates = pd.to_datetime(underreporting.loc[reg_num]['date']).strftime('%d/%m/%y')
                 mean = (1-underreporting.loc[reg_num]['mean'][-1]) #reporte
                 if mean>1: mean = 1
-                low = (1-underreporting.loc[reg_num]['low'][-1]) #estan al revés
+                low = (1-underreporting.loc[reg_num]['high'][-1]) #estan al revés
                 if low <0: low = 0
-                high = (1-underreporting.loc[reg_num]['high'][-1])
+                high = (1-underreporting.loc[reg_num]['low'][-1])
                 if high > 1: high = 1
                 fig.text(.5, .9, 'Datos últimos 14 días\nPrevalencia región: {} / Tasa región: {}%\nEstimación de infectados sintomáticos detectados: {:.0f}% ({:.0f}% - {:.0f}%)'.format('{:.2f}'.format(prevalencia_region.loc[3,region]).replace('.',','), '{:.2f}'.format(region_avg_rate.loc[3,region]*100).replace('.',','), mean*100, low*100, high*100),
                      horizontalalignment='center', verticalalignment='center', weight = 'bold', fontsize='x-large')
@@ -545,9 +545,9 @@ class report(object):
 
         mean = (1-subrep['mean']['Metropolitana de Santiago'][-1]) # reporte
         if mean>1: mean = 1
-        low = (1-subrep['low']['Metropolitana de Santiago'][-1])
+        low = (1-subrep['high']['Metropolitana de Santiago'][-1])
         if low<0: low = 0
-        high = (1-subrep['high']['Metropolitana de Santiago'][-1])
+        high = (1-subrep['low']['Metropolitana de Santiago'][-1])
         if high > 1 : high = 1
         fig.text(.5, .935, 'Región Metropolitana: Provincia de Santiago', horizontalalignment='center', verticalalignment='center', weight = 'bold', fontsize='xx-large')
         fig.text(.5, .9, 'Datos últimos 14 días\nPrevalencia región: {} / Tasa región: {}%\nEstimación de infectados sintomáticos detectados: {:.0f}% ({:.0f}% - {:.0f}%)'.format('{:.2f}'.format(prevalencia_region.loc[3,'Metropolitana de Santiago']).replace('.',','), '{:.2f}'.format(region_avg_rate.loc[3,'Metropolitana de Santiago']*100).replace('.',','), mean*100,low*100,high*100),
