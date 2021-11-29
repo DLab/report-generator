@@ -330,8 +330,8 @@ def asp_national(national_underrep):
     active_date_dt = pd.to_datetime(data_['dates'])
     under_date_dt = pd.to_datetime(data_2['date'])
 
-    active_date_human = active_date_dt.strftime('%y-%m-%d')
-    under_date_human = under_date_dt.strftime('%y-%m-%d')
+    active_date_human = active_date_dt.strftime('%d-%m-%y')
+    under_date_human = under_date_dt.strftime('%d-%m-%y')
 
     active_nat.index = active_date_human
     under_nat.index = under_date_human

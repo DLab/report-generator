@@ -10,7 +10,6 @@ from math import ceil
 import gc
 import os
 from zipfile import ZipFile
-
 #from report_utils import *
 from report_data_loader import *
 from matplotlib.backends.backend_pdf import PdfPages
@@ -32,7 +31,6 @@ class report(object):
         self.logo_fcv = mpimg.imread('logos/logos.png')
         self.logofcv = mpimg.imread('logos/logo_fcv.png')
         self.logofinis= mpimg.imread('logos/logo_finis.png')
-
 
     def current_r_date():
         endpoint_R = requests.get('http://192.168.2.223:5006/getNationalEffectiveReproduction' )
@@ -65,8 +63,6 @@ class report(object):
         report_day = data_day.strftime("%d/%m")
         return data_day, report_day
 
-
-
     ## PAGES
     def add_cover(self, report_day, delta):
         sns.set_context("paper", font_scale=1)
@@ -98,7 +94,7 @@ class report(object):
 
     def add_otras_provincias_page(self,report_day, pop, display, display_values, reg_display, reg_display_values, data, subrep, region_avg_rate,prevalencia_region, comun_per_region, muni_raw1, muni_raw2 ,weekly_prev1, weekly_prev2, R_arrow_past,R_arrow_last,death_rate1,death_rate2 ):
         sns.set_context("paper", font_scale=.6)
-        every_nth = 14
+        every_nth = 21
 
 
         fig = plt.figure(figsize=(11, 8.5))
@@ -112,7 +108,7 @@ class report(object):
         ax_sochi.imshow(self.logo_sochimi)
         ax_cinv.axis('off')
         ax_sochi.axis('off')
-        dates = pd.to_datetime(subrep['date']['Metropolitana de Santiago']).strftime('%d/%m/%y')
+        dates = pd.to_datetime(subrep['date']['Metropolitana de Santiago']).strftime('%d-%m-%y')
         ## Encabezado
         region = 'Metropolitana de Santiago'
         r = 15
@@ -187,8 +183,14 @@ class report(object):
         ax2.annotate('R_e 7d = {:.2f}'.format(data[data.name==comuna]['MEAN'][-7:].mean()), (.75,.65), color='C2',xycoords='axes fraction')
         ax2.annotate('R_e inst. = {:.2f}'.format(data[data.name==comuna]['MEAN'][-1]), (.75,.60), color='k',xycoords='axes fraction')
         matplotlib.pyplot.sca(ax2)
-        plt.xticks(rotation=45)
-        ax2.tick_params(bottom=False, left=True, labelleft=True, labelbottom=True)
+
+        r_dates = pd.to_datetime(data.index[1:])
+        ticks_labels = [r_dates[i].strftime("%d-%m-%y")  for i in range(len(r_dates))]
+        ax2.tick_params(axis='x',rotation=45, bottom=False, left=True, labelleft=True, labelbottom=True)
+        ax2.set_xticklabels(ticks_labels)#, fontdict = {'fontsize' : '8'})
+
+        #plt.xticks(rotation=45)
+        #ax2.tick_params(bottom=False, left=True, labelleft=True, labelbottom=True)
         for n, label in enumerate(ax2.xaxis.get_ticklabels()):
             if n % every_nth != 0:
                 label.set_visible(False)
@@ -220,10 +222,6 @@ class report(object):
         plt.savefig('otras_provincias.png', format = 'png', dpi = 600)
         pass
 
-
-
-
-
     # FOR TABLES
     def color_epi(data14, data7,data1):
         if data14 <= .8:
@@ -250,7 +248,6 @@ class report(object):
                 color = '#A71B08'
 
         return color
-
 
     def color_rate_summary(data):
         if data <= .25: color = '#00cc66'
@@ -342,7 +339,7 @@ class report(object):
     def add_regiones_page(self, report_day, pop, display, display_values, reg_display, reg_display_values, data, subrep, region_avg_rate,prevalencia_region, comun_per_region, muni_raw1, muni_raw2 ,weekly_prev1, weekly_prev2, R_arrow_past,R_arrow_last,death_rate1,death_rate2):
 
         sns.set_context("paper", font_scale=.6)
-        every_nth = 14
+        every_nth = 21
         filenames = []
         ######## Arica # Tarapa Antofag Atacama Coquimb Valpo # Liberta Maule # Ñuble # Biobio  Arauca  Ríos ## Lagos # Aisen # Maga
         heights=[.1,	.35,	.45,	.45,	.50,	.84,	.84,	.84,	.84,	.84,	.84,	.30,	.84,	.30,	.30,	.8]
@@ -403,7 +400,7 @@ class report(object):
             fig.text(.5, .935, 'Región de ' + regiones[r], horizontalalignment='center', verticalalignment='center', weight = 'bold', fontsize='xx-large')
             if region in subrep.index and region != "Aysén del General Carlos Ibáñez del Campo":
                 reg_num = inv_map[region]
-                dates = pd.to_datetime(underreporting.loc[reg_num]['date']).strftime('%d/%m/%y')
+                dates = pd.to_datetime(underreporting.loc[reg_num]['date']).strftime('%d-%m-%y')
                 mean = (1-underreporting.loc[reg_num]['mean'][-1]) #reporte
                 if mean>1: mean = 1
                 low = (1-underreporting.loc[reg_num]['high'][-1]) #estan al revés
@@ -479,6 +476,12 @@ class report(object):
             ax2.annotate('R_e 7d = {:.2f}'.format(data[data.name==comuna]['MEAN'][-7:].mean()), (.75,.65), color='C2',xycoords='axes fraction')
             ax2.annotate('R_e inst. = {:.2f}'.format(data[data.name==comuna]['MEAN'][-1]), (.75,.60), color='k',xycoords='axes fraction')
             matplotlib.pyplot.sca(ax2)
+
+            r_dates = pd.to_datetime(data.index[1:])
+            ticks_labels = [r_dates[i].strftime("%d-%m-%y")  for i in range(len(r_dates))]
+            ax2.tick_params(axis='x',rotation=45, bottom=False, left=True, labelleft=True, labelbottom=True)
+            ax2.set_xticklabels(ticks_labels)#, fontdict = {'fontsize' : '8'})
+
             plt.xticks(rotation=45)
             ax2.tick_params(bottom=False, left=True, labelleft=True, labelbottom=True)
             for n, label in enumerate(ax2.xaxis.get_ticklabels()):
@@ -523,7 +526,7 @@ class report(object):
         logo_fcv = mpimg.imread('logos/logos.png')
         logofcv = mpimg.imread('logos/logo_fcv.png')
         logofinis= mpimg.imread('logos/logo_finis.png')
-        every_nth = 14
+        every_nth = 21
         dates = pd.to_datetime(subrep['date']['Metropolitana de Santiago']).strftime('%d/%m/%y')
         ## Encabezados, pies de página y leyendas
         fig = plt.figure(figsize=(11, 8.5))
@@ -678,7 +681,7 @@ class report(object):
         axs[4].axis('off')
         #axs[4].axis('off')
         axs[6].axis('off')
-        dates = pd.to_datetime(national_underrep['date']).strftime('%y-%m-%d')
+        dates = pd.to_datetime(national_underrep['date']).strftime('%d-%m-%y')
         p_under, = axs[2].plot(dates, np.asarray(national_underrep['mean'])*100, color ='#006699')
         axs[2].fill_between(dates, np.asarray(national_underrep['low'])*100, np.asarray(national_underrep['high'])*100, alpha=.4, color ='#006699')
         axs[2].set_ylabel('% Subreporte')
@@ -704,7 +707,7 @@ class report(object):
 
         positivity = pcr_positivity_from_db() # take out
         dates = pd.to_datetime(positivity['Fecha'].values)
-        dates = dates.strftime('%y-%m-%d')
+        dates = dates.strftime('%d-%m-%y')
         p2, = axs[5].plot(dates, 100*positivity['positividad pcr'].values, color='#f49819')
         p1, = axs[5].plot(dates, 100*positivity['mediamovil_positividad_pcr'].values, color='#000000')
         axs[5].set_ylabel('Positividad PCR %', color='black', fontsize = 7)
@@ -1063,7 +1066,7 @@ class report(object):
         axs[1].set_ylim([0.5,2.5])
 
         ticks = [result.index[1:][i]  for i in range(len(result.index[1:])) if i%14==0]
-        ticks_labels = [result.index[1:][i].strftime("%d/%m")  for i in range(len(result.index[1:])) if i%14==0]
+        ticks_labels = [result.index[1:][i].strftime("%d-%m-%y")  for i in range(len(result.index[1:])) if i%14==0]
         axs[1].set_xticks(ticks)
         axs[1].tick_params(axis='x',rotation=45)
         #plt.xticks(rotation=45)
@@ -1079,10 +1082,10 @@ class report(object):
         data_active = json.loads(endpoint_active.text)
         all_data = pd.DataFrame(data_all['data'])
         active_data = pd.DataFrame(data_active['data'])
-        con_cases = pd.DataFrame(index = pd.to_datetime(data_all['dates']).strftime('%Y-%m-%d'))
+        con_cases = pd.DataFrame(index = pd.to_datetime(data_all['dates']).strftime('%d-%m-%y'))
         con_cases['total'] = all_data.sum(axis = 1).values
 
-        act_cases = pd.DataFrame(index = pd.to_datetime(data_active['dates']).strftime('%Y-%m-%d'))
+        act_cases = pd.DataFrame(index = pd.to_datetime(data_active['dates']).strftime('%d-%m-%y'))
         act_cases['total'] = active_data.sum(axis = 1).values
         #data
         axs[2].axis('off')
@@ -1122,7 +1125,7 @@ class report(object):
                 axs[4].annotate(str("{:.1f}".format(int(txt)/1000))+'k', (p1.get_data()[0][i], p1.get_data()[1][i]+1000), fontsize=5,bbox=dict(boxstyle='square,pad=-0.1', fc='white', ec='none'), weight='bold', ha ='center')
 
         for i, txt in enumerate(con_cases[6:].values):
-            if i%every_nth==0:
+            if i%7==0:
                 ax2.annotate(str("{:.1f}".format(int(txt)/1000))+'k', (p2.get_data()[0][i], p2.get_data()[1][i]+1000), fontsize=5,bbox=dict(boxstyle='square,pad=-0.1', fc='white', ec='none'), weight='bold', ha ='center')
 
         axs[5].axis('off')
