@@ -314,6 +314,40 @@ def underreporting_national(slice_date = None):
             data['high'] = data['high'][:date_index]
         return data
 
+def get_total_and_active_national(slicing_date = None):
+
+    url_all_cases = 'http://192.168.2.223:5006/getTotalCasesAllComunas'
+    url_active_cases = 'http://192.168.2.223:5006/getActiveCasesAllComunas'
+    # data = pd.read_csv(url)
+    endpoint_all = requests.get(url_all_cases)
+    endpoint_active = requests.get(url_active_cases)
+
+    data_all = json.loads(endpoint_all.text)
+    data_active = json.loads(endpoint_active.text)
+    all_data = pd.DataFrame(data_all['data'])
+    active_data = pd.DataFrame(data_active['data'])
+
+    con_cases = pd.DataFrame(index = pd.to_datetime(data_all['dates']).strftime('%d-%m-%y'))
+    con_cases['total'] = all_data.sum(axis = 1).values
+
+    act_cases = pd.DataFrame(index = pd.to_datetime(data_active['dates']).strftime('%d-%m-%y'))
+    act_cases['total'] = active_data.sum(axis = 1).values
+
+    if slicing_date is not None:
+        year, month, day = slicing_date.split('-')
+        weekday =  dtime.datetime(int(year), int(month), int(day)).weekday()
+        if weekday>=0 and weekday<4: # nearest Tu
+            dif = weekday#-1
+        else:
+            dif = weekday-4
+        data_day = dtime.datetime(int(year), int(month), int(day)) - dtime.timedelta(days=dif)
+
+        slice_index = np.argwhere(con_cases.index == data_day.strftime('%d-%m-%y'))[0][0]
+        con_cases = con_cases.iloc[:slice_index]
+        slice_index = np.argwhere(act_cases.index == data_day.strftime('%d-%m-%y'))[0][0]
+        act_cases = act_cases.iloc[:slice_index]
+
+    return con_cases, act_cases
 def asp_national(national_underrep):
     endpoint = 'http://192.168.2.223:5006/getActiveCasesAllComunas'
     req_end = requests.get(endpoint)
@@ -513,11 +547,10 @@ def active_cases_from_db(slicing_date = None):
             dif = weekday#-1
         else:
             dif = weekday-4
-        data_day = dtime.datetime(2020, 9, 21) - dtime.timedelta(days=dif)
+        data_day = dtime.datetime(int(year), int(month), int(day)) - dtime.timedelta(days=dif)
 
         slice_index = data_comunas.index[data_comunas['Fecha'] == data_day.strftime("%Y-%m-%d")].tolist()[0]
         data_comunas = data_comunas.iloc[:slice_index]
-        #print('dc:' ,data_comunas, data_day.strftime("%y-%m-%d"), data_comunas.index[data_comunas['Fecha'] == data_day.strftime("%Y-%m-%d")].tolist())
 
     return data_comunas
 
@@ -534,7 +567,7 @@ def deaths_comunas_from_db(slicing_date = None):
             dif = weekday#-1
         else:
             dif = weekday-4
-        data_day = dtime.datetime(2020, 9, 21) - dtime.timedelta(days=dif)
+        data_day = dtime.datetime(int(year), int(month), int(day)) - dtime.timedelta(days=dif)
 
         slice_index = muertos_comunas.index[muertos_comunas['Fecha'] == data_day.strftime("%Y-%m-%d")].tolist()[0]
         muertos_comunas = muertos_comunas.iloc[:slice_index]
@@ -553,10 +586,10 @@ def pcr_positivity_from_db(slicing_date = None):
             dif = weekday#-1
         else:
             dif = weekday-4
-        data_day = dtime.datetime(2020, 9, 21) - dtime.timedelta(days=dif)
+        data_day = dtime.datetime(int(year), int(month), int(day)) - dtime.timedelta(days=dif)
 
-        slice_index = pcr_positivity.index[pcr_positivity.index == data_day.strftime("%Y-%m-%d")].tolist()[0]
-        pcr_positivity = pcr_positivity.iloc[:slice_index]
+        slice_index = np.where(pcr_positivity.Fecha == data_day.strftime("%Y-%m-%d"))[0][0]
+        pcr_positivity = pcr_positivity.iloc[:slice_index+1]
 
     return pcr_positivity
 

@@ -650,7 +650,7 @@ class report(object):
         plt.savefig('metropolitana.png', format = 'png', dpi = 600)
         pass
 
-    def add_underreporting_page(self, national_underrep, report_day):
+    def add_underreporting_page(self, national_underrep, report_day, slice_date):
         logos = mpimg.imread('logos/uss_cinv_udd.png')
         logo_sochimi = mpimg.imread('logos/logo_sochimi.png')
         logo_fcv = mpimg.imread('logos/logos.png')
@@ -705,7 +705,7 @@ class report(object):
         axs[1].legend([p_under, p_act],["Porcentaje de subreporte", "Casos activos probables"], bbox_to_anchor=(0.29,1.85), fontsize = 8)
 
 
-        positivity = pcr_positivity_from_db() # take out
+        positivity = pcr_positivity_from_db(slice_date) # take out
         dates = pd.to_datetime(positivity['Fecha'].values)
         dates = dates.strftime('%d-%m-%y')
         p2, = axs[5].plot(dates, 100*positivity['positividad pcr'].values, color='#f49819')
@@ -714,6 +714,7 @@ class report(object):
         pos = []
         axs[5].grid(axis='y')
         axs[5].set_yticks(np.arange(0, 101, 10))
+
         for j, ind in enumerate(i):
                 pos +=[dates.get_loc(ind)]
 
@@ -1012,7 +1013,7 @@ class report(object):
         plt.savefig('summary.png', format = 'png', dpi = 600)
         pass
 
-    def add_national_page(self, result, chile_avg_rate, chile_prvlnc, subrep, activos,report_day):
+    def add_national_page(self, result, chile_avg_rate, chile_prvlnc, subrep, activos,report_day, slice_date):
         logos = mpimg.imread('logos/uss_cinv_udd.png')
         logo_sochimi = mpimg.imread('logos/logo_sochimi.png')
         logo_fcv = mpimg.imread('logos/logos.png')
@@ -1072,21 +1073,8 @@ class report(object):
         #plt.xticks(rotation=45)
         axs[1].set_xticklabels(ticks_labels, fontdict = {'fontsize' : '8'})
         ##data
-        url_all_cases = 'http://192.168.2.223:5006/getTotalCasesAllComunas'
-        url_active_cases = 'http://192.168.2.223:5006/getActiveCasesAllComunas'
-        # data = pd.read_csv(url)
-        endpoint_all = requests.get(url_all_cases)
-        endpoint_active = requests.get(url_active_cases)
+        con_cases, act_cases = get_total_and_active_national(slice_date)
 
-        data_all = json.loads(endpoint_all.text)
-        data_active = json.loads(endpoint_active.text)
-        all_data = pd.DataFrame(data_all['data'])
-        active_data = pd.DataFrame(data_active['data'])
-        con_cases = pd.DataFrame(index = pd.to_datetime(data_all['dates']).strftime('%d-%m-%y'))
-        con_cases['total'] = all_data.sum(axis = 1).values
-
-        act_cases = pd.DataFrame(index = pd.to_datetime(data_active['dates']).strftime('%d-%m-%y'))
-        act_cases['total'] = active_data.sum(axis = 1).values
         #data
         axs[2].axis('off')
 
