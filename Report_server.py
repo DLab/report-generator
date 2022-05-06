@@ -38,7 +38,7 @@ def reporte_generator(date = None):
     if date is not None:
         if date == 'latest':
             day, month = report_date()[1].split('/')
-            date = '2021-'+month+'-'+day
+            date = '2022-'+month+'-'+day
         else:
             year, month, day = date.split('-')
     else:
