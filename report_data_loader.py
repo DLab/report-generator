@@ -285,34 +285,45 @@ def color_im(data):
     else: color = 'red'
     return color
 
+# para resumen de estado epidemiológico
 def underreporting_by_region(slice_date = None):
     endpoint = 'http://192.168.2.223:5006/getNewCasesUnderreportByState'
     req_end = requests.get(endpoint)
     data_ = json.loads(req_end.text)
     data = data_['data']
     data = pd.DataFrame(data).T
+    # print("underreporting_by_region slice_date", slice_date)
     if slice_date is not None:
-        dates=pd.DataFrame(data.loc['10']['date']).apply(__iso_handler, axis =1)
+        # print("underreporting_by_region slice_date", slice_date)
+        dates = pd.DataFrame(data.loc['10']['date']).apply(__iso_handler, axis =1)
         date_index = int(np.argwhere(dates.values == slice_date))
+        print("date_index", date_index)
         for ind in data.index:
             data.loc[ind]['date'] = data.loc[ind]['date'][:date_index]
             data.loc[ind]['mean'] = data.loc[ind]['mean'][:date_index]
             data.loc[ind]['low']  = data.loc[ind]['low'][:date_index]
             data.loc[ind]['high'] = data.loc[ind]['high'][:date_index]
+
     return data
 
+
+# para resumen de estado epidemiológico
 def underreporting_national(slice_date = None):
-        endpoint = 'http://192.168.2.223:5006/getNationalNewCasesUnderreport'
-        req_end = requests.get(endpoint)
-        data = json.loads(req_end.text)
-        if slice_date is not None:
-            dates=pd.DataFrame(data['date']).apply(__iso_handler, axis =1)
-            date_index = int(np.argwhere(dates.values == slice_date))
-            data['date'] = data['date'][:date_index]
-            data['mean'] = data['mean'][:date_index]
-            data['low']  = data['low'][:date_index]
-            data['high'] = data['high'][:date_index]
-        return data
+    endpoint = 'http://192.168.2.223:5006/getNationalNewCasesUnderreport'
+    req_end = requests.get(endpoint)
+    data = json.loads(req_end.text)
+    # print("underreporting_national slice_date", slice_date)
+    if slice_date is not None:
+        # print("underreporting_national slice_date", slice_date)
+        dates = pd.DataFrame(data['date']).apply(__iso_handler, axis =1)
+        # print("dates.values", dates.values)
+        date_index = int(np.argwhere(dates.values == slice_date))
+        # print("date_index", date_index)
+        data['date'] = data['date'][:date_index]
+        data['mean'] = data['mean'][:date_index]
+        data['low']  = data['low'][:date_index]
+        data['high'] = data['high'][:date_index]
+    return data
 
 def get_total_and_active_national(slicing_date = None):
 
@@ -348,6 +359,7 @@ def get_total_and_active_national(slicing_date = None):
         act_cases = act_cases.iloc[:slice_index]
 
     return con_cases, act_cases
+
 def asp_national(national_underrep):
     endpoint = 'http://192.168.2.223:5006/getActiveCasesAllComunas'
     req_end = requests.get(endpoint)
@@ -594,8 +606,6 @@ def pcr_positivity_from_db(slicing_date = None):
     return pcr_positivity
 
 def population_from_db():
-
-
     pop =pd.read_json('http://192.168.2.223:5006/getComunas')
     pop = pop[['state', 'state_name', 'county', 'county_name', 'province_name', 'male_pop', 'female_pop', 'total_pop']]
     #counties_info.index = counties_info['county'].astype(str).apply(lambda x:x.zfill(5))

@@ -1,3 +1,4 @@
+
 from report_data_loader import *
 from modular_report import *
 
@@ -52,7 +53,7 @@ def report_gen(slice_date = None):
     data_region = active_comunas[active_comunas.Comuna!='Total'].pivot_table(index=['Region','Fecha'], values='Casos activos', aggfunc=sum)
     muertos_comunas = deaths_comunas_from_db(slice_date)
 
-    subrep = underreporting_by_region(slice_date)#pd.DataFrame(underreporting_by_region()).T
+    subrep = underreporting_by_region(slice_date) #pd.DataFrame(underreporting_by_region()).T
     subrep_national = underreporting_national(slice_date)
     dict = {"01":"Tarapacá",    "02":"Antofagasta",
             "03":"Atacama",     "04":"Coquimbo",
@@ -266,12 +267,15 @@ def report_gen(slice_date = None):
     uci_data = load_uci_data(slice_date)
     ### generate report
     reporte = report(report_day.replace('/','_'))
+
     reporte.add_cover(report_day, delta)
     reporte.add_summary(reg_display, prevalencia_region, region_avg_rate, subrep,data, uci_data, report_day, chile_prvlnc, chile_avg_rate, subrep_national, erre_national)
     reporte.add_national_page(erre_national, chile_avg_rate, chile_prvlnc, subrep_national, activos, report_day, slice_date)
-    reporte.add_underreporting_page(subrep_national, report_day, slice_date)
+    # reporte.add_underreporting_page(subrep_national, report_day, slice_date)
+    reporte.add_underreporting_page(subrep_national, report_day, slice_date, activos, chile_prvlnc, chile_avg_rate)
     reporte.add_regiones_page(report_day, pop, display, display_values, reg_display, reg_display_values, data, subrep, region_avg_rate,prevalencia_region, comun_per_region, muni_raw1, muni_raw2 ,weekly_prev1, weekly_prev2, R_arrow_past,R_arrow_last, death_rate1,death_rate2)
     reporte.add_metropolitana_page(report_day, pop, display, display_values, reg_display, reg_display_values, data, subrep, region_avg_rate,prevalencia_region, comun_per_region, muni_raw1, muni_raw2 ,weekly_prev1, weekly_prev2, R_arrow_past,R_arrow_last,death_rate1,death_rate2)
     reporte.add_otras_provincias_page(report_day, pop, display, display_values, reg_display, reg_display_values, data, subrep, region_avg_rate,prevalencia_region, comun_per_region, muni_raw1, muni_raw2 ,weekly_prev1, weekly_prev2, R_arrow_past,R_arrow_last,death_rate1,death_rate2)
     reporte.end_pages()
     pass
+

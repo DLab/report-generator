@@ -1,3 +1,4 @@
+
 from flask import Flask, Response, render_template, request, send_from_directory, redirect, Response
 import requests, json
 from report_data_loader import *
@@ -11,34 +12,34 @@ from datetime import timedelta, datetime
 app = Flask(__name__)
 
 app.config["reportes"] ='/reports/'
-app.config["anexos"] = '/reports/'
-app.config["pngs"] = '/reports/'
+app.config["anexos"]   = '/reports/'
+app.config["pngs"]     = '/reports/'
 # request.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, public, max-age=0"
 @app.after_request
 def add_header(response):
     response.headers["Cache-Control"] = "no-store"
     return response
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/', methods = ['GET', 'POST'])
 def index():
     tasks = [web_report()]
     if request.method == 'GET':
-        return render_template('index.html', tasks=tasks )
+        return render_template('index.html', tasks = tasks )
 
     elif request.method == 'POST':
         tasks[0].user_date = request.form['user_selection']
-        return render_template('index.html', tasks=tasks)
+        return render_template('index.html', tasks = tasks)
     else:
-        return render_template('index.html', tasks=tasks)
+        return render_template('index.html', tasks = tasks)
 
 
-@app.route('/reportegenerator/<date>', methods=['GET', 'POST'])
+@app.route('/reportegenerator/<date>', methods = ['GET', 'POST'])
 def reporte_generator(date = None):
     #by default the last day
     if date is not None:
         if date == 'latest':
             day, month = report_date()[1].split('/')
-            date = '2022-'+month+'-'+day
+            date = '2022-' + month + '-' + day
         else:
             year, month, day = date.split('-')
     else:
@@ -49,25 +50,26 @@ def reporte_generator(date = None):
         pass
 
     if request.method == 'GET':
-        name = 'reporte_'+day+'_'+month+'.zip'
+        name = 'reporte_' + day + '_' + month + '.zip'
         if date == 'latest':
             report_gen(date)
-            return send_from_directory(app.config["reportes"], filename=name, as_attachment=True)
+            return send_from_directory(app.config["reportes"], filename = name, as_attachment = True)
 
-        if path.exists('reporte_'+day+'_'+month+'.zip'):
+        if path.exists('reporte_' + day + '_' + month + '.zip'):
 
-            return send_from_directory(app.config["reportes"], filename=name, as_attachment=True)
+            return send_from_directory(app.config["reportes"], filename = name, as_attachment = True)
 
         else:
             report_gen(date)
-            return send_from_directory(app.config["reportes"], filename=name, as_attachment=True)
+            return send_from_directory(app.config["reportes"], filename = name, as_attachment = True)
+
 #a
-@app.route('/Anexo/<date>', methods=['GET'])
+@app.route('/Anexo/<date>', methods = ['GET'])
 def Anexo(date):
     if date is not None:
         if date == 'latest':
             day, month = report_date()[1].split('/')
-            date = '2022-'+month+'-'+day
+            date = '2022-' + month + '-' + day
         else:
             year, month, day = date.split('_')
     else:
@@ -75,17 +77,52 @@ def Anexo(date):
         date = None
 
     if request.method == 'GET':
-        name = 'Anexo_'+day+'_'+month+'.zip'
+        name = 'Anexo_' + day + '_' + month + '.zip'
         if date == 'latest':
-            plot_anexo_comunas(r_comunas_db(), day+'/'+month)
-            return send_from_directory(app.config["anexos"], filename=name, as_attachment=True)
+            plot_anexo_comunas(r_comunas_db(), day + '/' + month)
+            return send_from_directory(app.config["anexos"], filename = name, as_attachment = True)
 
         try:
-            return send_from_directory(app.config["anexos"], filename=name, as_attachment=True)
+            return send_from_directory(app.config["anexos"], filename = name, as_attachment = True)
 
         except:
-            plot_anexo_comunas(r_comunas_db(), day+'/'+month)
-            return send_from_directory(app.config["anexos"], filename=name, as_attachment=True)
+            plot_anexo_comunas(r_comunas_db(), day + '/' + month)
+            return send_from_directory(app.config["anexos"], filename = name, as_attachment = True)
+
+
+# @app.route('/summaryLastReport/latest', methods = ['GET'])
+# def sumLastReport(date = None):
+#     if date is not None:
+#         if date == 'latest':
+#             day, month = report_date()[1].split('/')
+#             date = '2022-' + month + '-' + day
+
+    # print("summaryLastReport", summaryLastReport(date))
+
+    # national_prevalence            = summaryLastReport[0]
+    # national_infection_rate        = summaryLastReport[1]
+    # active_infected                = summaryLastReport[2]
+    # symptomatic_infected           = summaryLastReport[3]
+    # symptomatic_infected_lowRate   = summaryLastReport[4]
+    # symptomatic_infected_hightRate = summaryLastReport[5]
+    # prob_active_infected_lowRate   = summaryLastReport[6]
+    # prob_active_infected_hightRate = summaryLastReport[7]
+
+    # dict_tmp = {
+    #     "date": date,
+    #     "national_prevalence": national_prevalence,
+    #     "national_infection_rate": national_infection_rate,
+    #     "active_infected": active_infected,
+    #     "symptomatic_infected": symptomatic_infected,
+    #     "symptomatic_infected_lowRate": symptomatic_infected_lowRate,
+    #     "symptomatic_infected_hightRate": symptomatic_infected_hightRate,
+    #     "prob_active_infected_lowRate": prob_active_infected_lowRate,
+    #     "prob_active_infected_hightRate": prob_active_infected_hightRate
+    # }
+
+    # dict_tmp = {"fecha": date}
+
+    # return make_response(jsonify(dict_tmp))
 
 
 class web_report(object):

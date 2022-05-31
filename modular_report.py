@@ -14,30 +14,32 @@ from zipfile import ZipFile
 from report_data_loader import *
 from matplotlib.backends.backend_pdf import PdfPages
 
+# this_year = dt.date.today().year
+# print(this_year)
 
 class report(object):
     """docstring"""
 
     def __init__(self, date):
         super(report, self).__init__()
-        self.pages = []
+        self.pages            = []
         self.predefined_types = ['national', 'state', 'summary', 'cover']
-        self.slicing_date = None
-        self.simulate_report = False
-        self.date = date
-        self.pdf = PdfPages('reporte_'+date+'.pdf')#formatear
-        self.logos = mpimg.imread('logos/uss_cinv_udd.png')
-        self.logo_sochimi = mpimg.imread('logos/logo_sochimi.png')
-        self.logo_fcv = mpimg.imread('logos/logos.png')
-        self.logofcv = mpimg.imread('logos/logo_fcv.png')
-        self.logofinis= mpimg.imread('logos/logo_finis.png')
+        self.slicing_date     = None
+        self.simulate_report  = False
+        self.date             = date
+        self.pdf              = PdfPages('reporte_' + date + '.pdf')#formatear
+        self.logos            = mpimg.imread('logos/uss_cinv_udd.png')
+        self.logo_sochimi     = mpimg.imread('logos/logo_sochimi.png')
+        self.logo_fcv         = mpimg.imread('logos/logos.png')
+        self.logofcv          = mpimg.imread('logos/logo_fcv.png')
+        self.logofinis        = mpimg.imread('logos/logo_finis.png')
 
     def current_r_date():
         endpoint_R = requests.get('http://192.168.2.223:5006/getNationalEffectiveReproduction' )
         R = json.loads(endpoint_R.text)
         year, month, day = str(R['dates'][-1].split('T')[0]).split('-')
-        date = dtime.datetime(int(year),int(month),int(day))
-        date += dtime.timedelta(days=1)
+        date = dtime.datetime(int(year), int(month), int(day))
+        date += dtime.timedelta(days = 1)
 
         r_day = date.strftime("%d/%m")
         return date.date() , r_day
@@ -53,57 +55,61 @@ class report(object):
         report_day: "day/month" string format
         '''
 
-        weekday =  dtime.date.today().weekday()
-        if weekday>=1 and weekday<5: # nearest Tu
-            dif = weekday-1
+        weekday = dtime.date.today().weekday()
+        if weekday >= 1 and weekday < 5: # nearest Tu
+            dif = weekday - 1
         else:
-            dif = (weekday-5)%7
+            dif = (weekday - 5) % 7
 
-        data_day = dtime.date.today() - dtime.timedelta(days=dif)
-        report_day = data_day.strftime("%d/%m")
-        return data_day, report_day
+        data_day            = dtime.date.today() - dtime.timedelta(days = sdif)
+        report_day          = data_day.strftime("%d/%m")
+        report_completeDate = data_day.strftime("%d/%m/%Y")
+        return data_day, report_day, report_completeDate
 
     ## PAGES
+
+    # PAGE 01
     def add_cover(self, report_day, delta):
-        sns.set_context("paper", font_scale=1)
-        figcover = plt.figure(edgecolor='k', figsize=(11,8.5))
-        axlogos = figcover.add_axes([0.05,.67,.3*1.1,.3*1.1]) # [0.05,.7,.3,.3]
-        axsochi = figcover.add_axes([0.30,.8,.2*1.2,.085*1.2])
-        axfcv = figcover.add_axes([.8,.75,.15,.2])
-        axmain = figcover.add_axes([.0,.0,1,.9])
+        sns.set_context("paper", font_scale = 1)
+        figcover = plt.figure(edgecolor = 'k', figsize = (11, 8.5))
+        axlogos  = figcover.add_axes([0.05, .67, .3*1.1, .3*1.1]) # [0.05,.7,.3,.3]
+        axsochi  = figcover.add_axes([0.30, .8, .2*1.2, .085*1.2])
+        axfcv    = figcover.add_axes([.8, .75, .15, .2])
+        axmain   = figcover.add_axes([.0, .0, 1, .9])
 
         axlogos.imshow(self.logos)
         axsochi.imshow(self.logo_sochimi)
-        axfcv.imshow(self.logo_fcv[:,:1000])
+        axfcv.imshow(self.logo_fcv[:, :1000])
         axmain.axis('off')
         axlogos.axis('off')
         axsochi.axis('off')
         axfcv.axis('off')
 
-        authors = r'César Ravello $^{1,3}$, Felipe Castillo $^{1,3}$, Tomás Villaseca¹, Samuel Ropert $^{1,3}$, Alejandro Bernardin $^{1,3}$, Tomás Pérez-Acle $^{1,2,3}$'
-        affiliations = '¹Computational Biology Lab, Fundación Ciencia & Vida, Santiago, Chile\n²Centro Interdisciplinario de Neurociencia de Valparaíso, Universidad de Valparaíso, Chile\n³Universidad San Sebastián, Chile\n\nAgradecimientos: Proyecto CV19GM AFOSR grant number FA9550-20-1-0196'
+        authors = r'César Ravello $^{1,2}$, Felipe Castillo $^{1,2}$, Samuel Ropert $^{1,2}$, Nicole Krumm $^{1}$, María José Pozo $^{1}$, Alejandro Bernardin $^{1}$, Tomás Pérez-Acle $^{1,2}$'
+        affiliations = '¹Computational Biology Lab, Centro BASAL Ciencia & Vida, Fundación Ciencia & Vida, Universidad San Sebastián\n²Facultad de Ingeniería y Tecnología, Universidad San Sebastián, Chile\n\nAgradecimientos: Proyecto CV19GM AFOSR grant number FA9550-20-1-0196'
 
-        axmain.text(.5,.7, 'Impacto de la pandemia Covid19 en Chile', ha='center', fontsize='xx-large')
-        axmain.text(.5,.6, 'Reporte al ' + report_day + '\nSemana epidemiológica {}'.format(ceil(delta.days/7)), ha='center', fontsize='xx-large')
-        axmain.text(.5,.25, authors, ha='center')
-        axmain.text(.5,.15, affiliations, ha='center', fontsize='small')
+        axmain.text(.5,.7, 'Impacto de la pandemia Covid19 en Chile', ha = 'center', fontsize = 'xx-large')
+        axmain.text(.5,.6, 'Reporte al ' + report_day + '\nSemana epidemiológica {}'.format(ceil(delta.days/7)), ha = 'center', fontsize = 'xx-large')
+        axmain.text(.5,.25, authors, ha = 'center')
+        axmain.text(.5,.15, affiliations, ha = 'center', fontsize = 'small')
 
-        figcover.savefig(self.pdf, format='pdf', dpi=600)
-        plt.savefig('cover.png', format='png', dpi=600)
+        figcover.savefig(self.pdf, format = 'pdf', dpi = 600)
+        plt.savefig('cover.png', format = 'png', dpi = 600)
         pass
 
-    def add_otras_provincias_page(self,report_day, pop, display, display_values, reg_display, reg_display_values, data, subrep, region_avg_rate,prevalencia_region, comun_per_region, muni_raw1, muni_raw2 ,weekly_prev1, weekly_prev2, R_arrow_past,R_arrow_last,death_rate1,death_rate2 ):
-        sns.set_context("paper", font_scale=.6)
+    # PAGE 21
+    def add_otras_provincias_page(self, report_day, pop, display, display_values, reg_display, reg_display_values, data, subrep, region_avg_rate,prevalencia_region, comun_per_region, muni_raw1, muni_raw2, weekly_prev1, weekly_prev2, R_arrow_past, R_arrow_last, death_rate1, death_rate2):
+        sns.set_context("paper", font_scale = .6)
         every_nth = 21
 
 
-        fig = plt.figure(figsize=(11, 8.5))
-        fig.text(0.95,0.06, '©2020, Laboratorio de Biología Computacional, Fundación Ciencia & Vida', ha='right', fontsize='large')
-        ax_logo = fig.add_axes([.85,.875,.1,.1])
+        fig = plt.figure(figsize = (11, 8.5))
+        fig.text(0.95,0.06, '©2020, Laboratorio de Biología Computacional, Fundación Ciencia & Vida', ha = 'right', fontsize = 'large')
+        ax_logo = fig.add_axes([.85, .875, .1, .1])
         ax_logo.imshow(self.logofcv)
         ax_logo.axis('off')
-        ax_cinv = fig.add_axes([.05,.875,.25,.08])
-        ax_sochi = fig.add_axes([.775,.885,.07,.07])
+        ax_cinv = fig.add_axes([.05, .875, .25, .08])
+        ax_sochi = fig.add_axes([.775, .885, .07, .07])
         ax_cinv.imshow(self.logos)
         ax_sochi.imshow(self.logo_sochimi)
         ax_cinv.axis('off')
@@ -112,38 +118,42 @@ class report(object):
         ## Encabezado
         region = 'Metropolitana de Santiago'
         r = 15
-        mean = (1-subrep['mean'][region][-1]) # reporte
-        if mean>1: mean = 1
-        high = (1-subrep['low'][region][-1])
-        low = (1-subrep['high'][region][-1])
-        if low<0: low = 0
-        high = (1-subrep['low'][region][-1])
+
+        mean = (1 - subrep['mean'][region][-1]) # reporte
+        if mean > 1: mean = 1
+
+        high = (1 - subrep['low'][region][-1])
+        low  = (1 - subrep['high'][region][-1])
+        if low < 0: low = 0
+
+        high = (1 - subrep['low'][region][-1])
         if high > 1 : high = 1
 
-        fig.text(.5, .935, 'Región Metropolitana: otras provincias', horizontalalignment='center', verticalalignment='center', weight = 'bold', fontsize='xx-large')
-        fig.text(.5, .9, 'Datos últimos 14 días\nPrevalencia región: {} / Tasa región: {}%\nEstimación de infectados sintomáticos detectados: {:.0f}% ({:.0f}% - {:.0f}%)'.format('{:.2f}'.format(prevalencia_region.loc[3,'Metropolitana de Santiago']).replace('.',','), '{:.2f}'.format(region_avg_rate.loc[3,'Metropolitana de Santiago']*100).replace('.',','), mean*100,low*100,high*100),
-             horizontalalignment='center', verticalalignment='center', weight = 'bold', fontsize='x-large')
+        fig.text(.5, .935, 'Región Metropolitana: otras provincias', horizontalalignment = 'center', verticalalignment = 'center',\
+                 weight = 'bold', fontsize = 'xx-large')
+        fig.text(.5, .9, 'Datos últimos 14 días\nPrevalencia región: {} / Tasa región: {}%\nEstimación de infectados sintomáticos detectados: {:.0f}% ({:.0f}% - {:.0f}%)'.format('{:.2f}'.format(prevalencia_region.loc[3, 'Metropolitana de Santiago']).replace('.',','), '{:.2f}'.format(region_avg_rate.loc[3,'Metropolitana de Santiago']*100).replace('.',','), mean*100, low*100, high*100),
+             horizontalalignment = 'center', verticalalignment = 'center', weight = 'bold', fontsize = 'x-large')
 
         ## Leyendas def regional_legend
-        fig.text(.187, .825, '1', fontsize='small')
-        fig.text(.2335, .825, '2', fontsize='small')
-        fig.text(.2775, .825, '3', fontsize='small')
-        fig.text(.3405, .825, '4', fontsize='small')
-        fig.text(.4225, .825, '5', fontsize='small')
-        fig.text(.4825, .825, '6', fontsize='small')
+        fig.text(.187, .825, '1', fontsize = 'small')
+        fig.text(.2335, .825, '2', fontsize = 'small')
+        fig.text(.2775, .825, '3', fontsize = 'small')
+        fig.text(.3405, .825, '4', fontsize = 'small')
+        fig.text(.4225, .825, '5', fontsize = 'small')
+        fig.text(.4825, .825, '6', fontsize = 'small')
         #fig.text(.5275, .825, '7', fontsize='small')
         #fig.text(.5875, .825, '7', fontsize='small')
-        fig.text(.605, .27, 'Prevalencia \u2264 4', color='#00cc66', horizontalalignment='left', verticalalignment='center', weight = 'bold')
-        fig.text(.605, .26, '4 < Prevalencia < 5', color='#ffcc00', horizontalalignment='left', verticalalignment='center', weight = 'bold')
-        fig.text(.605, .25, 'Prevalencia \u2265 5', color='#ff0000', horizontalalignment='left', verticalalignment='center', weight = 'bold')
+        fig.text(.605, .27, 'Prevalencia \u2264 4', color = '#00cc66', horizontalalignment = 'left', verticalalignment = 'center', weight = 'bold')
+        fig.text(.605, .26, '4 < Prevalencia < 5', color = '#ffcc00', horizontalalignment = 'left', verticalalignment = 'center', weight = 'bold')
+        fig.text(.605, .25, 'Prevalencia \u2265 5', color = '#ff0000', horizontalalignment = 'left', verticalalignment = 'center', weight = 'bold')
 
-        fig.text(.705, .27, 'Tasa \u2264 25%', color='#00cc66', horizontalalignment='left', verticalalignment='center', weight = 'bold')
-        fig.text(.705, .26, '25% < Tasa < 30%', color='#ffcc00', horizontalalignment='left', verticalalignment='center', weight = 'bold')
-        fig.text(.705, .25, 'Tasa \u2265 30%', color='#ff0000', horizontalalignment='left', verticalalignment='center', weight = 'bold')
+        fig.text(.705, .27, 'Tasa \u2264 25%', color = '#00cc66', horizontalalignment = 'left', verticalalignment = 'center', weight = 'bold')
+        fig.text(.705, .26, '25% < Tasa < 30%', color = '#ffcc00', horizontalalignment = 'left', verticalalignment = 'center', weight = 'bold')
+        fig.text(.705, .25, 'Tasa \u2265 30%', color = '#ff0000', horizontalalignment = 'left', verticalalignment = 'center', weight = 'bold')
 
-        fig.text(.805, .27, 'R_e \u2264 0,8', color='#00cc66', horizontalalignment='left', verticalalignment='center', weight = 'bold')
-        fig.text(.805, .26, '0,8 < R_e < 1,0', color='#ffcc00', horizontalalignment='left', verticalalignment='center', weight = 'bold')
-        fig.text(.805, .25, 'R_e \u2265 1,0', color='#ff0000', horizontalalignment='left', verticalalignment='center', weight = 'bold')
+        fig.text(.805, .27, 'R_e \u2264 0,8', color = '#00cc66', horizontalalignment = 'left', verticalalignment = 'center', weight = 'bold')
+        fig.text(.805, .26, '0,8 < R_e < 1,0', color = '#ffcc00', horizontalalignment = 'left', verticalalignment = 'center', weight = 'bold')
+        fig.text(.805, .25, 'R_e \u2265 1,0', color = '#ff0000', horizontalalignment = 'left', verticalalignment = 'center', weight = 'bold')
 
         fig.text(0.605,0.06,
                  '1 Infectados activos / 10.000 habitantes.\n'+
@@ -159,14 +169,14 @@ class report(object):
                  #'- Uso de camas por Servicio de Salud al ' + sochi_date + ' según SOCHIMI.\n'+
                  '- Flechas R_e: cambio mayor/menor a 5% vs ultimos 7 días.\n'+
                  '- Otras flechas: cambio mayor/menor a 5% vs semana anterior.\n'
-                 , ha='left',fontsize='large')
+                 , ha = 'left', fontsize = 'large')
 
         ax = fig.add_axes([.125, .01, .475, .84])
-        selection = pop[(pop['state_name']=='Metropolitana de Santiago')&(pop['province_name']!='Santiago')].index.values
+        selection = pop[(pop['state_name'] == 'Metropolitana de Santiago') & (pop['province_name']!='Santiago')].index.values
         #make_table(display.loc[selection], display_values.loc[selection], ax, True)
         self._make_table(display.loc[selection], display_values.loc[selection],
-                       reg_display[reg_display.index==region].rename(index={region:'VALOR REGIONAL ⁷'}), reg_display_values[reg_display.index==region], ax, True)
-        self._add_arrows(display_values.loc[selection], muni_raw1, muni_raw2 ,weekly_prev1, weekly_prev2, R_arrow_past,R_arrow_last,death_rate1,death_rate2, ax, 0.49, .935, .18, .06, .29,.68,.905,.0315, .0205)
+                       reg_display[reg_display.index == region].rename(index = {region: 'VALOR REGIONAL ⁷'}), reg_display_values[reg_display.index == region], ax, True)
+        self._add_arrows(display_values.loc[selection], muni_raw1, muni_raw2, weekly_prev1, weekly_prev2, R_arrow_past, R_arrow_last, death_rate1,death_rate2, ax, 0.49, .935, .18, .06, .29, .68, .905, .0315, .0205)
         #fig.text(.12, .85, 'Región de ' + regiones[r], horizontalalignment='left', verticalalignment='center', weight = 'bold')
 
         ax2 = fig.add_axes([.645, .625, .3, .22])#.645, .595, .3, .22])
@@ -336,6 +346,8 @@ class report(object):
         else: color = '#ff0000'
         return color
 
+
+    # PAGE ???
     def add_regiones_page(self, report_day, pop, display, display_values, reg_display, reg_display_values, data, subrep, region_avg_rate,prevalencia_region, comun_per_region, muni_raw1, muni_raw2 ,weekly_prev1, weekly_prev2, R_arrow_past,R_arrow_last,death_rate1,death_rate2):
 
         sns.set_context("paper", font_scale=.6)
@@ -414,7 +426,7 @@ class report(object):
                 fig.text(.5, .9, 'Datos últimos 14 días\nPrevalencia región: {} / Tasa región: {}%\nEstimación de infectados sintomáticos detectados: ND'.format('{:.2f}'.format(prevalencia_region.loc[3,region]).replace('.',','), '{:.2f}'.format(region_avg_rate.loc[3,region]*100).replace('.',',')),
                      horizontalalignment='center', verticalalignment='center', weight = 'bold', fontsize='x-large')
             ## Leyendas
-            fig.text(.187, .825, '1', fontsize='small')
+            fig.text(.187, .825, '1', fontsize='small') 
             fig.text(.2335, .825, '2', fontsize='small')
             fig.text(.2775, .825, '3', fontsize='small')
             fig.text(.3405, .825, '4', fontsize='small')
@@ -519,6 +531,8 @@ class report(object):
 
         pass
 
+
+    # PAGE 20
     def add_metropolitana_page(self, report_day, pop, display, display_values, reg_display, reg_display_values, data, subrep, region_avg_rate,prevalencia_region, comun_per_region, muni_raw1, muni_raw2 ,weekly_prev1, weekly_prev2, R_arrow_past,R_arrow_last,death_rate1,death_rate2):
         sns.set_context("paper", font_scale=.6)
         logos = mpimg.imread('logos/uss_cinv_udd.png')
@@ -650,7 +664,10 @@ class report(object):
         plt.savefig('metropolitana.png', format = 'png', dpi = 600)
         pass
 
-    def add_underreporting_page(self, national_underrep, report_day, slice_date):
+
+    # PAGE 04
+    # def add_underreporting_page(self, national_underrep, report_day, slice_date):
+    def add_underreporting_page(self, national_underrep, report_day, slice_date, activos, chile_prvlnc, chile_avg_rate):
         logos = mpimg.imread('logos/uss_cinv_udd.png')
         logo_sochimi = mpimg.imread('logos/logo_sochimi.png')
         logo_fcv = mpimg.imread('logos/logos.png')
@@ -670,7 +687,17 @@ class report(object):
         ax_cinv.axis('off')
         ax_sochi.axis('off')
 
-        fig.text(.5, .88, 'Trayectoria de subreporte a nivel nacional', horizontalalignment='center', verticalalignment='center', weight = 'bold', fontsize='x-large')
+        probables = (1-national_underrep['mean'][-1])
+        if probables<0: probables = 0
+        if probables>1: probables = 1
+        probables_bajo =(1 -  national_underrep['low'][-1])
+        if probables_bajo <0: probables_bajo = 0
+        probables_alto =  (1 - national_underrep['high'][-1])
+        if probables_alto>1: probables_alto = 1
+        activos = int(activos)
+
+        # fig.text(.5, .88, 'Trayectoria de subreporte a nivel nacional', horizontalalignment='center', verticalalignment='center', weight = 'bold', fontsize='x-large')
+        fig.text(.5, .9, 'Trayectoria de subreporte a nivel nacional\n\nTrayectoria de R_efectivo nacional a lo largo del tiempo \nPrevalencia País: {} / Tasa país: {}%\nEstimación de infectados sintomáticos detectados: {}% ({}% - {}%)\nInfectados activos: {} / Inf. Act. Probables: {} ~ {}'.format('{:.2f}'.format(chile_prvlnc.T.values[-1][0]).replace('.',','), '{:.2f}'.format(chile_avg_rate.values[-1]*100).replace('.',','), '{:.2f}'.format(probables*100).replace('.',','), '{:.2f}'.format(probables_bajo*100).replace('.',','), '{:.2f}'.format(probables_alto*100).replace('.',',') , '{:,}'.format(activos).replace(',','.'), '{:,}'.format(int(activos/probables_alto)).replace(',','.'),'{:,}'.format(int(activos/probables_bajo)).replace(',','.')), horizontalalignment='center', verticalalignment='center', weight = 'bold', fontsize='x-large')
 
         ax_regions = {}
         ax_coordinates = {}
@@ -752,6 +779,8 @@ class report(object):
         plt.savefig('subreporte.png', format = 'png', dpi = 600)
         pass
 
+
+    # PAGE 02
     def add_summary(self, reg_data, prevalencia_region, region_avg_rate, subr, R_reg,hs_occupation, report_date, national_prev, national_rate, national_underreporting, national_r):
         hospital_available = False
         UCI_available = True
@@ -1013,6 +1042,8 @@ class report(object):
         plt.savefig('summary.png', format = 'png', dpi = 600)
         pass
 
+
+    # PAGE 03
     def add_national_page(self, result, chile_avg_rate, chile_prvlnc, subrep, activos,report_day, slice_date):
         logos = mpimg.imread('logos/uss_cinv_udd.png')
         logo_sochimi = mpimg.imread('logos/logo_sochimi.png')
@@ -1060,9 +1091,12 @@ class report(object):
         axs[1].hlines(result['MEAN'][-14:].mean(), result.iloc[-14].name,result.iloc[-1].name, color='C4')
         axs[1].hlines(result['MEAN'][-7:].mean(), result.iloc[-7].name,result.iloc[-1].name, color='C2')
         axs[1].hlines(1, result.iloc[1].name,result.iloc[-1].name, ls='--',color='k')
+        
+        # GFX LEGEND
         axs[1].annotate('R_e 14d = {:.2f}'.format(result['MEAN'][-14:].mean()), (.8,.6), color='C4', xycoords='axes fraction')
         axs[1].annotate('R_e 7d = {:.2f}'.format(result['MEAN'][-7:].mean()), (.8,.56), color='C2', xycoords='axes fraction')
         axs[1].annotate('R_e inst. = {:.2f}'.format(result['MEAN'].values[-1]), (.8,.52), color='k', xycoords='axes fraction')
+        
         axs[1].set_ylabel('R efectivo')
         axs[1].set_ylim([0.5,2.5])
 
@@ -1072,7 +1106,7 @@ class report(object):
         axs[1].tick_params(axis='x',rotation=45)
         #plt.xticks(rotation=45)
         axs[1].set_xticklabels(ticks_labels, fontdict = {'fontsize' : '8'})
-        ##data
+        ##data gráficos casos confirmados/casos activos
         con_cases, act_cases = get_total_and_active_national(slice_date)
 
         #data
@@ -1125,6 +1159,8 @@ class report(object):
         fig.savefig(self.pdf, format='pdf', dpi=1200)
         plt.savefig('nacional.png', format = 'png', dpi = 600)
         pass
+
+
 
     def end_pages(self):
         # closing pdf file
@@ -1535,3 +1571,6 @@ class report(object):
                 ax.annotate("", xy=(x_inter+0.388, y_[region]+0.012), xytext=(x_inter+0.395, y_[region]+0.012),
                     arrowprops=dict(facecolor='black',  ec='black',fc='darkgray' ,headlength = 5, headwidth = 0.5, width= 10.5, shrink=0.075),annotation_clip=False, xycoords='axes fraction')
         pass
+
+
+
