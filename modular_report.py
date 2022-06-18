@@ -72,7 +72,7 @@ class report(object):
     def add_cover(self, report_day, delta):
         sns.set_context("paper", font_scale = 1)
         figcover = plt.figure(edgecolor = 'k', figsize = (11, 8.5))
-        axlogos  = figcover.add_axes([0.05, .67, .3*1.1, .3*1.1]) # [0.05,.7,.3,.3]
+        axlogos  = figcover.add_axes([0.05, .77, .3*0.5, .3*0.5]) # [0.05,.7,.3,.3]
         axsochi  = figcover.add_axes([0.30, .8, .2*1.2, .085*1.2])
         axfcv    = figcover.add_axes([.8, .75, .15, .2])
         axmain   = figcover.add_axes([.0, .0, 1, .9])
@@ -108,7 +108,7 @@ class report(object):
         ax_logo = fig.add_axes([.85, .875, .1, .1])
         ax_logo.imshow(self.logofcv)
         ax_logo.axis('off')
-        ax_cinv = fig.add_axes([.05, .875, .25, .08])
+        ax_cinv = fig.add_axes([-.03, .875, .25, .08])
         ax_sochi = fig.add_axes([.775, .885, .07, .07])
         ax_cinv.imshow(self.logos)
         ax_sochi.imshow(self.logo_sochimi)
@@ -401,7 +401,7 @@ class report(object):
             ax_logo = fig.add_axes([.85,.875,.1,.1])
             ax_logo.imshow(self.logofcv)
             ax_logo.axis('off')
-            ax_cinv = fig.add_axes([.05,.875,.25,.08])
+            ax_cinv = fig.add_axes([-.03,.875,.25,.08])
             ax_sochi = fig.add_axes([.775,.885,.07,.07])
             ax_cinv.imshow(self.logos)
             ax_sochi.imshow(self.logo_sochimi)
@@ -549,7 +549,7 @@ class report(object):
         ax_logo = fig.add_axes([.85,.875,.1,.1])
         ax_logo.imshow(self.logofcv)
         ax_logo.axis('off')
-        ax_cinv = fig.add_axes([.05,.875,.25,.08])
+        ax_cinv = fig.add_axes([-.03,.875,.25,.08])
         ax_sochi = fig.add_axes([.775,.885,.07,.07])
         ax_cinv.imshow(self.logos)
         ax_sochi.imshow(self.logo_sochimi)
@@ -677,10 +677,12 @@ class report(object):
         #fig, axs = plt.subplots(6,1,figsize=(8.5, 13), gridspec_kw={'height_ratios': [0.5,15,0.1, 0.5,15,4.5]})
         fig, axs = plt.subplots(7,1,figsize=(8.5, 13), gridspec_kw={'height_ratios': [0.5,0.5,15,2, 2,15,4.5]})
         fig.text(0.9,0.04, '©2020, Laboratorio de Biología Computacional, Fundación Ciencia & Vida', ha='right')
+        #logo fund ciencia y vida
         ax_logo = fig.add_axes([.8,.868,.1*1.2,.1*1.2])
         ax_logo.imshow(self.logofcv)
         ax_logo.axis('off')
-        ax_cinv = fig.add_axes([.05,.89,.25*0.9,.08*0.9])
+        # ax_cinv logos -> uss
+        ax_cinv = fig.add_axes([.05,.89,.25*0.7,.08*0.7])
         ax_sochi = fig.add_axes([.74,.9,.05*1.2,.05*1.2])
         ax_cinv.imshow(self.logos)
         ax_sochi.imshow(self.logo_sochimi)
@@ -697,7 +699,7 @@ class report(object):
         activos = int(activos)
 
         # fig.text(.5, .88, 'Trayectoria de subreporte a nivel nacional', horizontalalignment='center', verticalalignment='center', weight = 'bold', fontsize='x-large')
-        fig.text(.5, .9, 'Trayectoria de subreporte a nivel nacional\n\nTrayectoria de R_efectivo nacional a lo largo del tiempo \nPrevalencia País: {} / Tasa país: {}%\nEstimación de infectados sintomáticos detectados: {}% ({}% - {}%)\nInfectados activos: {} / Inf. Act. Probables: {} ~ {}'.format('{:.2f}'.format(chile_prvlnc.T.values[-1][0]).replace('.',','), '{:.2f}'.format(chile_avg_rate.values[-1]*100).replace('.',','), '{:.2f}'.format(probables*100).replace('.',','), '{:.2f}'.format(probables_bajo*100).replace('.',','), '{:.2f}'.format(probables_alto*100).replace('.',',') , '{:,}'.format(activos).replace(',','.'), '{:,}'.format(int(activos/probables_alto)).replace(',','.'),'{:,}'.format(int(activos/probables_bajo)).replace(',','.')), horizontalalignment='center', verticalalignment='center', weight = 'bold', fontsize='x-large')
+        fig.text(.5, .9, 'Trayectoria de subreporte a nivel nacional\nPrevalencia País: {} / Tasa país: {}%\nEstimación de infectados sintomáticos detectados: {}% ({}% - {}%)\nInfectados activos: {} / Inf. Act. Probables: {} ~ {}'.format('{:.2f}'.format(chile_prvlnc.T.values[-1][0]).replace('.',','), '{:.2f}'.format(chile_avg_rate.values[-1]*100).replace('.',','), '{:.2f}'.format(probables*100).replace('.',','), '{:.2f}'.format(probables_bajo*100).replace('.',','), '{:.2f}'.format(probables_alto*100).replace('.',',') , '{:,}'.format(activos).replace(',','.'), '{:,}'.format(int(activos/probables_alto)).replace(',','.'),'{:,}'.format(int(activos/probables_bajo)).replace(',','.')), horizontalalignment='center', verticalalignment='center', weight = 'bold', fontsize='x-large')
 
         ax_regions = {}
         ax_coordinates = {}
@@ -727,6 +729,7 @@ class report(object):
         p_act, = ax2.plot(pos,m,color='#df4d38')
         ax2.fill_between(pos, l, h, alpha=.4, color='#df4d38')
         ax2.set_yticks(np.arange(0, 300001, 30000))
+        ax2.set_yticklabels(["{:,}".format(x).replace(',','~').replace('~','.') for x in np.arange(0, 300001, 30000)])
         ax2.tick_params(axis='y', labelcolor='black')
         ax2.set_ylim(bottom =0)
         axs[1].legend([p_under, p_act],["Porcentaje de subreporte", "Casos activos probables"], bbox_to_anchor=(0.29,1.85), fontsize = 8)
@@ -749,7 +752,10 @@ class report(object):
         p3, = ax3.plot(pos, m, color='#df4d38')
         ax3.set_ylabel('Infectados sintomáticos activos probables', color='black', fontsize = 7)
         ax3.fill_between(pos, l, h, alpha=.4, color='#df4d38')
+        # eje y con separación de miles
+        # ax3.set_yticks(["{:,}".format(x).replace(',','~').replace('~','.') for x in np.arange(0, 300001, 30000)])
         ax3.set_yticks(np.arange(0, 300001, 30000))
+        ax3.set_yticklabels(["{:,}".format(x).replace(',','~').replace('~','.') for x in np.arange(0, 300001, 30000)])
         ax3.set_ylim(bottom = 0)
         axs[4].legend([p1, p2, p3],["Positividad PCR media movil 7 días", "Positividad PCR diaria", "Casos activos probables"], bbox_to_anchor=(0.37,0.75), fontsize = 8)
         axs[4].set_title('Casos activos probables y positividad diaria de exámenes PCR a nivel nacional',loc='center', weight = 'bold', fontsize = 8)
@@ -1055,12 +1061,12 @@ class report(object):
         fig, axs = plt.subplots(6,1,figsize=(8.5, 13), gridspec_kw={'height_ratios': [4,15,0.1, 0.5,15,4.5]})
 
         #fig = plt.figure(figsize=(8.5, 11)) #(8.5, 11)
-        fig.text(0.1,0.04, 'R_e calculado de acuerdo a Cori et al. (2019) https://doi.org/10.1016/j.epidem.2019.100356\nValor mostrado corresponde a promedio últimos 7 días (línea verde) y 14 días (línea violeta) respectivamente.\nDatos epidemiológicos https://github.com/MinCiencia/Datos-COVID19', ha='left')
+        fig.text(0.1,0.04, 'R_e calculado de acuerdo a Cori et al. (2019) https://doi.org/10.1016/j.epidem.2019.100356\nValor mostrado corresponde a promedio últimos 7 días (línea verde) y 14 días (línea violeta) respectivamente.\nDatos epidemiológicos https://github.com/MinCiencia/Datos-COVID19', ha = 'left')
         fig.text(0.9,0.04, '©2020, Laboratorio de Biología Computacional, Fundación Ciencia & Vida', ha='right')
         ax_logo = fig.add_axes([.8,.868,.1*1.2,.1*1.2])
         ax_logo.imshow(logofcv)
         ax_logo.axis('off')
-        ax_cinv = fig.add_axes([.05,.89,.25*0.9,.08*0.9])
+        ax_cinv = fig.add_axes([.05,.89,.25*0.7,.08*0.7])
         ax_sochi = fig.add_axes([.74,.9,.05*1.2,.05*1.2])
         ax_cinv.imshow(logos)
         ax_sochi.imshow(logo_sochimi)

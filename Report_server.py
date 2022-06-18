@@ -90,41 +90,6 @@ def Anexo(date):
             return send_from_directory(app.config["anexos"], filename = name, as_attachment = True)
 
 
-# @app.route('/summaryLastReport/latest', methods = ['GET'])
-# def sumLastReport(date = None):
-#     if date is not None:
-#         if date == 'latest':
-#             day, month = report_date()[1].split('/')
-#             date = '2022-' + month + '-' + day
-
-    # print("summaryLastReport", summaryLastReport(date))
-
-    # national_prevalence            = summaryLastReport[0]
-    # national_infection_rate        = summaryLastReport[1]
-    # active_infected                = summaryLastReport[2]
-    # symptomatic_infected           = summaryLastReport[3]
-    # symptomatic_infected_lowRate   = summaryLastReport[4]
-    # symptomatic_infected_hightRate = summaryLastReport[5]
-    # prob_active_infected_lowRate   = summaryLastReport[6]
-    # prob_active_infected_hightRate = summaryLastReport[7]
-
-    # dict_tmp = {
-    #     "date": date,
-    #     "national_prevalence": national_prevalence,
-    #     "national_infection_rate": national_infection_rate,
-    #     "active_infected": active_infected,
-    #     "symptomatic_infected": symptomatic_infected,
-    #     "symptomatic_infected_lowRate": symptomatic_infected_lowRate,
-    #     "symptomatic_infected_hightRate": symptomatic_infected_hightRate,
-    #     "prob_active_infected_lowRate": prob_active_infected_lowRate,
-    #     "prob_active_infected_hightRate": prob_active_infected_hightRate
-    # }
-
-    # dict_tmp = {"fecha": date}
-
-    # return make_response(jsonify(dict_tmp))
-
-
 class web_report(object):
     """docstring for web_report."""
 
