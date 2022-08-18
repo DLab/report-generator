@@ -583,7 +583,7 @@ def deaths_comunas_from_db(slicing_date = None):
 
         slice_index = muertos_comunas.index[muertos_comunas['Fecha'] == data_day.strftime("%Y-%m-%d")].tolist()[0]
         muertos_comunas = muertos_comunas.iloc[:slice_index]
-
+    muertos_comunas = muertos_comunas.drop(muertos_comunas[muertos_comunas.Comuna == 'Total'].index)
     return muertos_comunas
 
 def pcr_positivity_from_db(slicing_date = None):
